@@ -7,4 +7,5 @@
 *.out
 *.pdf
 *.tks
-
+*.fls
+*.fdb_latexmk

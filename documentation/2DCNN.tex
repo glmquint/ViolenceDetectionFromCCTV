@@ -1,2 +1,56 @@
 \chapter{2D CNN approach}
-Hello there
+The very fist approach we tried was to develop from scratch a 2D CNN to recognize the violence in the videos, to do that we needed to extract the frame from the videos and feed it to the AI model since a 2D CNN process images.
+\section{Frame extraction}
+This was done with the help of \textit{FFpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
+\begin{lstlisting}[language=bash, caption={FFpeg example}, label={lst:FFpegExample}]
+#!/bin/bash
+# To force the frame rate of the output file to 24 fps:
+$ ffmpeg -i input.avi -r 24 output.avi
+
+\end{lstlisting}
+
+Following there is the code used to extract the frames from the videos. For brevity we will show only the code used to extract the frames from the "fight" directory and the path are removed.
+\begin{lstlisting}[language=bash, caption={Frame extraction}, label={lst:FrameExtraction}]
+
+    !for f in $(ls [path_to_video]); do ffmpeg -i [path_to_video]/$f -vf fps=5 [path_to_frame]/${f%.*}-%03d.png; done;
+\end{lstlisting}
+
+This command uses FFmpeg to extract frames from a video file and save them as individual images, it iterates over each file in the specified directory and applies the FFmpeg command to convert the video to frames. The frames are saved with the same name as the original video file, followed by a three-digit number to indicate the frame sequence, the frames are saved in the specified output directory.
+
+\section{Dataset cleaning}
+As previously stated the dataset was very dirty, the main problem consisted in the images being of different sizes, this is a problem because the AI model needs to have a fixed input size, so we needed to resize the images to a fixed size, we decided to use 224x224 pixels as input size, this is a common size used in image classification tasks. However, doing so would have caused the images to be distorted, so we needed to crop the images to a square shape, we decided to crop the images to the center and then reshape it, this way we would have hopefully lost the least amount of information. The following code shows the basic idea of the cropping process:
+
+\begin{lstlisting}[language=Python, caption={Image Cropper}, label={lst:ImageCropper}]
+    from PIL import Image
+    import matplotlib.pyplot as plt
+
+    def crop_and_resize_image(image_path):
+        # Open the image
+        image = Image.open(image_path)
+
+        # Calculate the coordinates for cropping
+        width, height = image.size
+        size = min(width, height)
+        left = (width - size) // 2
+        top = (height - size) // 2
+        right = left + size
+        bottom = top + size
+
+        # Crop the image
+        cropped_image = image.crop((left, top, right, bottom))
+
+        # Resize the image to 224x224 pixels
+        resized_image = cropped_image.resize((224, 224))
+
+        # Display the resized image
+        plt.imshow(resized_image)
+        plt.axis('off')
+        plt.show()
+
+    # Usage example
+    crop_and_resize_image([path_to_image])
+\end{lstlisting}
+
+\section{First model}
+
+
