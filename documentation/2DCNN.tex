@@ -93,3 +93,56 @@ As previously stated the dataset was very dirty, this problem would be a constan
 However this proved to be not enough, the dataset was still very dirty, some videos contained writing on the screen, others were phone recording of desktop monitors. Ideally we could crop the videos in a square shape starting from the center, but this would cause a too big of a loss of information. The best solution would be to have bounding boxes for each video, but alas this was not the case and to manually made it would have been too much of a workload.
 
 \section{First model}
+For the first model we decided to use a 2D CNN, the model was composed of 2 convolutional layers, 2 max pooling layers and 2 fully connected layers, the model was trained for 30 epochs with a batch size of 32, patient 15, the optimizer used was Adam. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence, the model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=1.3\textwidth]{images/2D_3_noDrop.png}
+    \caption{Initial 2D CNN model}
+    \label{fig:First2DCNN}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/731a-2D3-86ad-history.png}
+    \caption{Training history}
+    \label{fig:First2DCNNHistory}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/731a-2D3-86ad-conf_matrix.png}
+    \caption{Confusion matrix}
+    \label{fig:First2DCNNConfusionMatrix}
+\end{figure}
+
+
+The first comment to be made is that the confusion matrix is heavily bias towards the \textit{Non violence} side. This is due to the fact that the dataset can be quite chaotic and the model is not able to learn the features of the videos. For example the model may learn form the Non violence part of the dataset that gatherings of people are not to be flagged as violence, however this could easily lead to false positive (Violence images classified as Non violence ones).
+
+Another comment is to be made regarding the validation loss and accuracy which is quite unstable and unsatisfactory, this could signal overfitting and general failing in extrapolating the main features of the videos.
+
+\section{Second model}
+For the second model we decided to amp the convolution layers to 3.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=1.3\textwidth]{images/2D_35_noDrop.png}
+    \caption{Second 2D CNN model}
+    \label{fig:Second2DCNN}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/731a-2D35-86ad-history.png}
+    \caption{Training history}
+    \label{fig:Second2DCNNHistory}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/731a-2D35-86ad-conf_matrix.png}
+    \caption{Confusion matrix}
+    \label{fig:Second2DCNNMatrix}
+\end{figure}
