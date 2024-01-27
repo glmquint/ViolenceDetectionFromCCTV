@@ -178,7 +178,112 @@ As previously stated the generalization problem was a constant one, to addressed
     \caption{Confusion matrix of the third model}
     \label{fig:Third2DCNNMatrix}
 \end{figure}
-
+\pagebreak
 \section{Pretrained models}
-Since the 2D CNN approach was not working we decided to try a different approach, we decided to use pretrained models.
-TO BE CONTINUED
+Since the 2D CNN approach was not working we decided to try a different approach, we decided to use pretrained models. This was done to have a better understanding of the problem by comparing the results of them with the ones we presented previously. We decided to use resnet50 for our purposes, the model was trained with the main parameters unchanged and with the \textit{fine tuning} methodology. Many models were tested with different \textit{building blocks}, below are shown 4 of them and their code. The first one is the base model, the second one is the base model with data augmentation, the third one is like the second one but adds dropout layers and the fourth one is like the third one but with more dropout layers.
+
+\begin{lstlisting}[language=python, caption={ResNet50}, label={lst:resnet50Code}]
+    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+    set_trainable = False
+    for layer in resnet.layers:
+        if layer.name == 'conv5_block1_1_conv':
+            set_trainable = True
+        if set_trainable:
+            layer.trainable = True
+        else:
+            layer.trainable = False
+    model.add(resnet)
+    model.add(GlobalAveragePooling2D())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+\end{lstlisting}
+
+\begin{lstlisting}[language=python, caption={ResNet50 Second Test}, label={lst:resnet50CodeSecondTest}]
+    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+    set_trainable = False
+    for layer in resnet.layers:
+        if layer.name == 'conv5_block1_1_conv':
+            set_trainable = True
+        if set_trainable:
+            layer.trainable = True
+        else:
+            layer.trainable = False
+
+    model.add(RandomFlip('horizontal'))
+    model.add(RandomRotation(0.1))
+    model.add(RandomZoom(0.2))
+    model.add(resnet)
+    model.add(GlobalAveragePooling2D())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+\end{lstlisting}
+
+
+
+\begin{lstlisting}[language=python, caption={ResNet50 Third test}, label={lst:resnet50CodeThirdTest}]
+    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+    set_trainable = False
+    for layer in resnet.layers:
+        if layer.name == 'conv5_block1_1_conv':
+            set_trainable = True
+        if set_trainable:
+            layer.trainable = True
+        else:
+            layer.trainable = False
+
+    model.add(RandomFlip('horizontal'))
+    model.add(RandomRotation(0.1))
+    model.add(RandomZoom(0.2))
+    model.add(resnet)
+    model.add(GlobalAveragePooling2D())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+\end{lstlisting}
+
+\begin{lstlisting}[language=python, caption={ResNet50 Fourth test}, label={lst:resnet50CodeFourthTest}]
+    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+    set_trainable = False
+    for layer in resnet.layers:
+        if layer.name == 'conv5_block1_1_conv':
+            set_trainable = True
+        if set_trainable:
+            layer.trainable = True
+        else:
+            layer.trainable = False
+
+    model.add(RandomFlip('horizontal'))
+    model.add(RandomRotation(0.1))
+    model.add(RandomZoom(0.2))
+    model.add(resnet)
+    model.add(GlobalAveragePooling2D())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(1, activation='sigmoid'))
+\end{lstlisting}
+
+
+Following a recap of the accuracy of the models:
+
+\begin{table}[!h]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{c|c|c|c|c|}
+    \cline{2-5}
+                                            & \textbf{1st model} & \textbf{2nd model} & \textbf{3rd model} & \textbf{4th model} \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Accuracy}} & 0,7429             & 0,6357             & 0,76429            & 0,6953             \\ \hline
+    \end{tabular}%
+    }
+    \caption{Models accuracy}
+    \label{tab:ResnetAccuracy}
+    \end{table}
+
+    As can be seen from the table the best model is the third one, this is due to the fact that the dataset is very small and the model is not able to learn from it, so the data augmentation is a must. The fourth model is not as good as the third one, because of the dropout layers which are too many and the model is not able to learn features properly. The first model is the second best and function as a base line. The second one is the worst of the collection, this is due to the fact that the data augmentation alone is not enough and also leads to overfitting of non real features as background or object in the videos.
+
+    \section{Conclusions}
+    The resnet50 models brought some improvements to the accuracy of the model in comparison to the ones we developed, however we thought we could have done better, so we decided to try a different approach, the 3D CNN one.
