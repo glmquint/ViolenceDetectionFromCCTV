@@ -71,7 +71,15 @@ However, this method was found to not be flexible enough, in the light of new ap
     
 
 \end{lstlisting}
-The main idea is to create a 4 pickle files for each configuration (train\_data, train\_label, test\_data, test\_label), the pickle files are created only if they are not present, this way we can load them at runtime and avoid the frame extraction process. In case of creation needed, the frames are shuffled and then balanced, this is done to avoid deleting always the same videos. This process allows us not only to create pickles for 2D CNN but also for 3D CNN.
+The main idea is to create a 4 pickle files for each configuration (train\_data, train\_label, test\_data, test\_label), the pickle files are created only if they are not present, this way we can load them at runtime and avoid the frame extraction process. In case of creation needed, the frames are shuffled and then balanced, this is done to avoid deleting always the same videos. This process allows us not only to create pickles for 2D CNN but also for 3D CNN. The \textit{pkl\_config} parameters contains a dictionary with the following information:
+\begin{itemize}
+	\item frame size
+	\item number of frames
+	\item train split
+	\item fps
+	\item crop
+\end{itemize}
+The \textit{frame size} is the size of the frame, the \textit{number of frames} is the number of frames to be extracted from the video for each \textit{burst}, the \textit{train split} is the split between training and testing, the \textit{fps} is the frame per second of the video, for example if we want to train a 2D CNN both the \textit{number of frames} and the \textit{fps} will be 1, if we want to train a 3D CNN with burst of 2 seconds we will set the \textit{number of frames} to 10 and the \textit{fps} to 5. The \textit{crop} is a boolean value that indicates if the frame should be cropped or not to remove the black bars, more on that later.
 
 \section{Dataset cleaning}
 As previously stated the dataset was very dirty, this problem would be a constant problem throughout the project, the dataset was composed of videos of different length, different resolution and different frame rate, in addition many videos contained black bars on the sides making any AI model learn from that instead of the actual features. To solve this problem we decided to crop the videos remove the black bars, this was done with the following code:
@@ -90,7 +98,7 @@ As previously stated the dataset was very dirty, this problem would be a constan
     return cropped_image, y_nonzero, x_nonzero
 \end{lstlisting}
 
-However this proved to be not enough, the dataset was still very dirty, some videos contained writing on the screen, others were phone recording of desktop monitors. Ideally we could crop the videos in a square shape starting from the center, but this would cause a too big of a loss of information. The best solution would be to have bounding boxes for each video, but alas this was not the case and to manually made it would have been too much of a workload.
+However this proved to be not enough, the dataset was still very dirty, as previously said, things like writings in the videos, \textit{fake} violence frames and other problems increased the difficulty for the model to learn the correct features. Ideally we could crop the videos in a square shape starting from the center, but this would cause a too big of a loss of information, especially if we consider that the video are not centered on the violent actions. The best solution would be to have bounding boxes for each video, but alas this was not the case and to manually made it would have been too much of a workload.
 
 \section{First model}
 For the first model we decided to use a 2D CNN, the model was composed of 2 convolutional layers, 2 max pooling layers and 2 fully connected layers, the model was trained for 30 epochs with a batch size of 32, patient 15, the optimizer used was Adam. This parameters were found to be the best from early experimentation runs. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence, the model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
@@ -180,7 +188,7 @@ As previously stated the generalization problem was a constant one, to addressed
 \end{figure}
 \pagebreak
 \section{Pretrained models}
-Since the 2D CNN approach was not working we decided to try a different approach, we decided to use pretrained models. This was done to have a better understanding of the problem by comparing the results of them with the ones we presented previously. We decided to use resnet50 for our purposes, the model was trained with the main parameters unchanged and with the \textit{fine tuning} methodology. Many models were tested with different \textit{building blocks}, below are shown 4 of them and their code. The first one is the base model, the second one is the base model with data augmentation, the third one is like the second one but adds dropout layers and the fourth one is like the third one but with more dropout layers.
+Since the 2D CNN approach was not working we decided to try a different method, we decided to use pretrained models. This was done to have a better understanding of the problem by comparing the results of them with the ones we presented previously. We decided to use resnet50 for our purposes, the model was trained with the main parameters unchanged and with the \textit{fine tuning} methodology. Many models were tested with different \textit{building blocks}, below are shown 4 of them and their code. The first one is the base model, the second one is the base model with data augmentation, the third one is like the second one but adds dropout layers and the fourth one is like the third one but with more dropout layers.
 
 \begin{lstlisting}[language=python, caption={ResNet50}, label={lst:resnet50Code}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
@@ -285,5 +293,7 @@ Following a recap of the accuracy of the models:
 
     As can be seen from the table the best model is the third one, this is due to the fact that the dataset is very small and the model is not able to learn from it, so the data augmentation is a must. The fourth model is not as good as the third one, because of the dropout layers which are too many and the model is not able to learn features properly. The first model is the second best and function as a base line. The second one is the worst of the collection, this is due to the fact that the data augmentation alone is not enough and also leads to overfitting of non real features as background or object in the videos.
 
-    \section{Conclusions}
-    The resnet50 models brought some improvements to the accuracy of the model in comparison to the ones we developed, however we thought we could have done better, so we decided to try a different approach, the 3D CNN one.
+    \section{Reamining problems and solutions} 
+    The resnet50 models brought some improvements to the accuracy of the model in comparison to the ones we developed, however we thought we could have done better, the main issue, as said before, is the dataset, it is too dirty and it has no action frames or bounding boxes to help the model learn the features of the videos. This leads, during the frame extract phase, to images before the violent acts or after them to be fed to the model with a violence label, this makes the model learns the wrong features. To solve this problem we could have discarded the \textit{bad} frames, but this would need to manually remove them, which would have been too much of a workload and would have been outside of the scope of the project.
+
+    What the 2D models lack is context, if the model could evaluate more correlated frames before generating an output it would, in our minds, have been able to learn the features of the videos better, this is the main reason why the 2D models proved unsatisfactory. So we decided to try a different approach, the 3D CNN one.
