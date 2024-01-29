@@ -187,8 +187,39 @@ As previously stated the generalization problem was a constant one, to addressed
     \label{fig:Third2DCNNMatrix}
 \end{figure}
 \pagebreak
-\section{Pretrained models}
-Since the 2D CNN approach was not working we decided to try a different method, we decided to use pretrained models. This was done to have a better understanding of the problem by comparing the results of them with the ones we presented previously. We decided to use resnet50 for our purposes, the model was trained with the main parameters unchanged and with the \textit{fine tuning} methodology. Many models were tested with different \textit{building blocks}, below are shown 4 of them and their code. The first one is the base model, the second one is the base model with data augmentation, the third one is like the second one but adds dropout layers and the fourth one is like the third one but with more dropout layers.
+\section{Fifth model}
+Instead of further complicating the model we decided to simplify it to avoid the phenomenon of overfitting. The fifth model is the simplest one and has decent result, with a good recall but produces a large number of false positive.
+\begin{lstlisting}[language=python, caption={Fifth model}, label={lst:Fifth model}]
+model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(Dense(64, activation='relu'))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(1, activation='sigmoid'))
+\end{lstlisting}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/731a-2D10_inv-86ad-conf_matrix.png}
+    \caption{Fifth model}
+    \label{fig:Fifth model conf matrix}
+\end{figure}
+
+\section{Pretrained models: ResNet50}
+Since the 2D \textit{from scratch} CNN approach was not working we decided to try a different method, we decided to use pretrained models. This was done to have a better understanding of the problem by comparing the results of them with the ones we presented previously. We decided to use Resnet50 as the first pretrained model. \\
+
+ResNet50 \footnote{\url{https://arxiv.org/abs/1512.03385}} was developed by Microsoft Research in 2015, it features a deep structure with 50 layers, utilizing residual blocks that allow the network to learn residual functions to ease the optimization process.
+The core innovation lies in skip connections, where the input from one layer is added to the output of another, facilitating the flow of gradients during backpropagation.
+ResNet50  won the ImageNet Large Scale Visual Recognition Challenge in 2015. It includes bottleneck building blocks to improve computational efficiency by reducing the number of parameters in the intermediate layers.
+\begin{figure}[]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ResNet50_architecture.png}
+    \caption{ResNet50 architecture}
+    \label{fig:ResNet50Arch}
+\end{figure}
+We used ResNet50 with the imagenet weights, and we choose to do 
+\textit{fine tuning}. We started by adding our dense layers for classifications and we only train the last convolutional block.  
 
 \begin{lstlisting}[language=python, caption={ResNet50}, label={lst:resnet50Code}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
@@ -207,6 +238,16 @@ Since the 2D CNN approach was not working we decided to try a different method, 
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
+The model shows a promising results, with a good confusion matrix and also with a 76\% recall on violence
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/731a-resnet2D1-86ad-conf_matrix.png}
+    \caption{ResNet50 first model}
+    \label{fig:ResNet2d1}
+\end{figure}
+
+We continued to improve the model adding the layers for data augmentation, however we noticed worse performances compared to the first model and signals of overfitting. 
 \begin{lstlisting}[language=python, caption={ResNet50 Second Test}, label={lst:resnet50CodeSecondTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
@@ -228,7 +269,7 @@ Since the 2D CNN approach was not working we decided to try a different method, 
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
-
+In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model. 
 
 \begin{lstlisting}[language=python, caption={ResNet50 Third test}, label={lst:resnet50CodeThirdTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
@@ -252,6 +293,15 @@ Since the 2D CNN approach was not working we decided to try a different method, 
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ROCResnet.png}
+    \caption{ROC of the first vs third model}
+    \label{fig:ROCResnet}
+\end{figure}
+
+
+We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons for a correct classification of the problem. 
 \begin{lstlisting}[language=python, caption={ResNet50 Fourth test}, label={lst:resnet50CodeFourthTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
@@ -271,29 +321,31 @@ Since the 2D CNN approach was not working we decided to try a different method, 
     model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.1))
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
 
-Following a recap of the accuracy of the models:
+Following a recap of the accuracy of the models and the recall:
 
-\begin{table}[!h]
-    \centering
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{c|c|c|c|c|}
-    \cline{2-5}
-                                            & \textbf{1st model} & \textbf{2nd model} & \textbf{3rd model} & \textbf{4th model} \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Accuracy}} & 0,7429             & 0,6357             & 0,76429            & 0,6953             \\ \hline
-    \end{tabular}%
-    }
-    \caption{Models accuracy}
-    \label{tab:ResnetAccuracy}
-    \end{table}
+\begin{table}[h!]
+\centering
+\caption{}
+\label{tab:ResNet50}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+                  & \textbf{ResNet 1st model} & \textbf{ResNet 2nd model} & \textbf{ResNet 3rd model} & \textbf{ResNet 4th model} \\ \hline
+\textbf{accuracy} & 0,7429                    & 0,6357                    & 0,76429                   & 0,6809                    \\ \hline
+\textbf{recall}   & 0,76667                   & 0,3619                    & 0,69524                   & 0,65714                   \\ \hline
+\end{tabular}
+\end{table}
 
-    As can be seen from the table the best model is the third one, this is due to the fact that the dataset is very small and the model is not able to learn from it, so the data augmentation is a must. The fourth model is not as good as the third one, because of the dropout layers which are too many and the model is not able to learn features properly. The first model is the second best and function as a base line. The second one is the worst of the collection, this is due to the fact that the data augmentation alone is not enough and also leads to overfitting of non real features as background or object in the videos.
+As can be seen from the table the best model is the third one, this is due to the fact that the dataset is very small and the model is not able to learn from it, so the data augmentation is a must. The fourth model is not as good as the third one, because of the dropout layers which are too many and the model is not able to learn features properly. The first model is the second best and function as a base line. The second one is the worst of the collection, this is due to the fact that the data augmentation alone is not enough and also leads to overfitting of non real features as background or object in the videos.
 
-    \section{Reamining problems and solutions} 
-    The resnet50 models brought some improvements to the accuracy of the model in comparison to the ones we developed, however we thought we could have done better, the main issue, as said before, is the dataset, it is too dirty and it has no action frames or bounding boxes to help the model learn the features of the videos. This leads, during the frame extract phase, to images before the violent acts or after them to be fed to the model with a violence label, this makes the model learns the wrong features. To solve this problem we could have discarded the \textit{bad} frames, but this would need to manually remove them, which would have been too much of a workload and would have been outside of the scope of the project.
+\section{Pretrained models: EfficientNetB0}
+As a second model for 
+
+\section{Reamining problems and solutions} 
+The ResNet50 and EfficientNetB0 models brought some improvements to the accuracy of the model in comparison to the ones we developed, however we thought we could have done better, the main issue, as said before, is the dataset, it is too dirty and it has no action frames or bounding boxes to help the model learn the features of the videos. This leads, during the frame extract phase, to images before the violent acts or after them to be fed to the model with a violence label, this makes the model learns the wrong features. To solve this problem we could have discarded the \textit{bad} frames, but this would need to manually remove them, which would have been too much of a workload and would have been outside of the scope of the project.
 
     What the 2D models lack is context, if the model could evaluate more correlated frames before generating an output it would, in our minds, have been able to learn the features of the videos better, this is the main reason why the 2D models proved unsatisfactory. So we decided to try a different approach, the 3D CNN one.
