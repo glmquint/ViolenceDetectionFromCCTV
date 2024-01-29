@@ -343,8 +343,15 @@ Following a recap of the accuracy of the models and the recall:
 As can be seen from the table the best model is the third one, this is due to the fact that the dataset is very small and the model is not able to learn from it, so the data augmentation is a must. The fourth model is not as good as the third one, because of the dropout layers which are too many and the model is not able to learn features properly. The first model is the second best and function as a base line. The second one is the worst of the collection, this is due to the fact that the data augmentation alone is not enough and also leads to overfitting of non real features as background or object in the videos.
 
 \section{Pretrained models: EfficientNetB0}
-As a second model for 
+EfficientNetB0\footnote{\url{https://arxiv.org/abs/1905.11946}} is part of the EfficientNet family, designed to achieve superior performance with fewer parameters compared to traditional models.
+It introduces a compound scaling method that uniformly scales the depth, width, and resolution of the network, leading to improved efficiency across all dimensions.
+The architecture includes mobile inverted bottleneck blocks and squeeze-and-excitation blocks to enhance feature extraction and model expressiveness.
+EfficientNetB0 is also suitable for resource-constrained environments like mobile devices, being computationally efficient. 
+The reason we choose EfficientNetB0 is because it can be used in IoT devices, like cameras, for a first filter on images for police operators.
+Instead of going directly to fine tuning we start with a \textit{features extraction} approach.
+We start from the simplest implementation as possible, with only a final dense layer with one neuron. 
 
+ 
 \section{Reamining problems and solutions} 
 The ResNet50 and EfficientNetB0 models brought some improvements to the accuracy of the model in comparison to the ones we developed, however we thought we could have done better, the main issue, as said before, is the dataset, it is too dirty and it has no action frames or bounding boxes to help the model learn the features of the videos. This leads, during the frame extract phase, to images before the violent acts or after them to be fed to the model with a violence label, this makes the model learns the wrong features. To solve this problem we could have discarded the \textit{bad} frames, but this would need to manually remove them, which would have been too much of a workload and would have been outside of the scope of the project.
 
