@@ -17,7 +17,7 @@ While 2D CNNs have proven effective for traditional image-related tasks like cla
 As explained in the "Frame extraction" section, the pickles approach allowed us to generate files containing the data needed to train and test the model. The \textit{number of frames} and the \textit{fps} values for each pkl\_config were used to test the same model on different input data like burst of 1, 2 or 3 seconds. As shown in Fig. \ref{fig:3DCNNschema}, the model is a very simple one, with 2 convolutional layers, 2 max pooling layers and 1 fully connected. The idea is not to dwell on the model and how improve it, but to show that the addition of "context" to the input data, in this case the temporal dimension, allows the model to achieve better results independently form the complexity of the model.
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/3D9CNNschema.png}
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/3D9CNNschema.png}
     \caption{Schema of the 3D CNN}
     \label{fig:3DCNNschema}
 \end{figure}
@@ -44,7 +44,7 @@ Finally the third test was done with NoF equal to 15 and fps equal to 5, meaning
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/3D9CNNschema.png}
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/3D9CNNschema.png}
     \caption{Schema of the "simpler" 3D CNN}
     \label{fig:3D3CNNschema}
 \end{figure}
