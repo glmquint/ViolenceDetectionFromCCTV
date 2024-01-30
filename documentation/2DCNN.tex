@@ -1,8 +1,8 @@
 \chapter{2D CNN approach}
 The very fist approach we tried was to develop from scratch a 2D CNN to recognize the violence in the videos, to do that we needed to extract the frame from the videos and feed it to the AI model since a 2D CNN process images.
 \section{Frame extraction}
-The idea initially was to do it with the help of \textit{FFpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
-\begin{lstlisting}[language=bash, caption={FFpeg example}, label={lst:FFpegExample}]
+The idea initially was to do it with the help of \textit{FFmpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
+\begin{lstlisting}[language=bash, caption={FFmpeg example}, label={lst:FFmpegExample}]
 #!/bin/bash
 # To force the frame rate of the output file to 24 fps:
 $ ffmpeg -i input.avi -r 24 output.avi
