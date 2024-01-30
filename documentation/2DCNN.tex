@@ -286,6 +286,12 @@ We continued to improve the model adding the layers for data augmentation, howev
 \end{lstlisting}
 
 In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model. 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ROCResnet.png}
+    \caption{ROC of the first Resnet50 vs third Resnet50 model}
+    \label{fig:ROCResnet}
+\end{figure}
 
 \begin{lstlisting}[language=python, caption={ResNet50 Third test}, label={lst:resnet50CodeThirdTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
@@ -308,13 +314,6 @@ In order to fight overfitting we introduced a dropout layer and the overall accu
     model.add(Dense(128, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.8\textwidth]{images/ROCResnet.png}
-    \caption{ROC of the first Resnet50 vs third Resnet50 model}
-    \label{fig:ROCResnet}
-\end{figure}
 
 
 We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons for a correct classification of the problem. 
@@ -356,7 +355,7 @@ Following a recap of the accuracy of the models and the recall:
     \multicolumn{1}{|c|}{\textbf{ResNet 4th Model}} & 0,6809            & 0,6571                   & 0,7048                       \\ \hline
     \end{tabular}%
     }
-    \caption{ResNet accuracy and recall}
+    \caption{ResNet50 accuracy and recall}
     \label{tab:ResNet50}
     \end{table}
 
@@ -366,12 +365,56 @@ As can be seen in Tab. \ref{tab:ResNet50} the best model is the third one, this 
 EfficientNetB0\footnote{\url{https://arxiv.org/abs/1905.11946}} is part of the EfficientNet family, designed to achieve superior performance with fewer parameters compared to traditional models.
 It introduces a compound scaling method that uniformly scales the depth, width, and resolution of the network, leading to improved efficiency across all dimensions.
 The architecture includes mobile inverted bottleneck blocks and squeeze-and-excitation blocks to enhance feature extraction and model expressiveness.
+
 EfficientNetB0 is also suitable for resource-constrained environments like mobile devices, being computationally efficient. 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/EfficientNetB0-architecture-36.png}
+    \caption{EfficientNetB0 architecture}
+    \label{fig:EfficientNetB0architecture}
+\end{figure}
+
 The reason we choose EfficientNetB0 is because it can be used in IoT devices, like cameras, for a first filter on images for police operators.
 Instead of going directly to fine tuning we start with a \textit{features extraction} approach.
-We start from the simplest implementation as possible, with only a final dense layer with one neuron. 
+We start from the simplest implementation as possible, with only a final dense layer with one neuron with a sigmoid activation function.
+We obtained a 62\% overall accuracy, comparable to the second model of the \emph{scratch} 2D CNN but below both ResNet and the final model. In order to improve the performance of the network we add data augmentation layers and also more dense layers.
+The accuracy increased from 62\% to 69\% and accordingly the violence recall (48\% compared to 38\%), however we are still far away from an acceptable level. This leads us to the conclusion that the best approach to get good results is to go to fine tuning. 
+We decided to train only the two last convolutional blocks, since going at the first layers will need a huge dataset, we leave the same dense layers for classification as used in fine tuning. 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/731a-EfficientNetB0_15-5a4e-conf_matrix.png}
+    \caption{EfficientNetB0: third model}
+    \label{fig:EfficientNetB0_15}
+\end{figure}
+The results obtained are better than the ones in fine tuning, this models also obtains obtains similar results in terms of accuracy and violence recall, to the third ResNet model. 
+We follow this approach unfreezing another half of the fifth convolutional blocks.
+Looking at the ROC curves we cannot draw conclusions on the winner but the AUC is better and also between 0.1 and 0.8 false positive rate the fourth model performs better than the third. 
 
- 
+However we try to push the model to the limit adding another dense layer in order to improve the classifier performance and adding also dropout to avoid overfitting.
+We obtain a good model, with a 78\% accuracy with a strong recall on violence, that we used as a second choice parameter. 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/731a-EfficientNetB0_24-b2b1-conf_matrix.png}
+    \caption{EfficientNetB0: fifth model}
+    \label{fig:EfficientNetB0_24}
+\end{figure}
+
+\begin{table}[]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|l|l|}
+\hline
+                               & \textbf{Accuracy} & \textbf{Violence recall} & \textbf{Non Violence recall} \\ \hline
+\textbf{Features extraction 1} & 0,6214            & 0,3857                   & 0,85714                      \\ \hline
+\textbf{Features extraction 2} & 0,6928            & 0,4809                   & 0,90476                      \\ \hline
+\textbf{Fine tuning 1}         & 0,7690            & 0,70952                  & 0,82857                      \\ \hline
+\textbf{Fine tuning 2}         & 0,7762            & 0,7191                   & 0,8333                       \\ \hline
+\textbf{Fine tuning 3}         & 0,7833            & 0,8762                   & 0,6905                       \\ \hline
+\end{tabular}%
+}
+\caption{EfficientNetB0 accuracy and recall}
+\label{tab:EfficientNetB0 }
+\end{table}
 \section{Reamining problems and solutions} 
 The ResNet50 and EfficientNetB0 models brought some improvements to the accuracy of the model in comparison to the ones we developed, however we thought we could have done better, the main issue, as said before, is the dataset, it is too dirty and it has no action frames or bounding boxes to help the model learn the features of the videos. This leads, during the frame extract phase, to images before the violent acts or after them to be fed to the model with a violence label, this makes the model learns the wrong features. To solve this problem we could have discarded the \textit{bad} frames, but this would need to manually remove them, which would have been too much of a workload and would have been outside of the scope of the project.
 
