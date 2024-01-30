@@ -1,8 +1,8 @@
 \chapter{2D CNN approach}
 The very fist approach we tried was to develop from scratch a 2D CNN to recognize the violence in the videos, to do that we needed to extract the frame from the videos and feed it to the AI model since a 2D CNN process images.
 \section{Frame extraction}
-The idea initially was to do it with the help of \textit{FFpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
-\begin{lstlisting}[language=bash, caption={FFpeg example}, label={lst:FFpegExample}]
+The idea initially was to do it with the help of \textit{FFmpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
+\begin{lstlisting}[language=bash, caption={FFmpeg example}, label={lst:FFmpegExample}]
 #!/bin/bash
 # To force the frame rate of the output file to 24 fps:
 $ ffmpeg -i input.avi -r 24 output.avi
@@ -105,7 +105,7 @@ For the first model we decided to use a 2D CNN, the model was composed of 2 conv
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth, height=1.3\textwidth]{images/2D_3_noDrop.png}
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/2D_3_noDrop.png}
     \caption{Initial 2D CNN model}
     \label{fig:First2DCNN}
 \end{figure}
@@ -150,7 +150,7 @@ We decided to use a cautious approach since the problem presented itself as a ve
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth, height=1.3\textwidth]{images/2D_35_noDrop.png}
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/2D_35_noDrop.png}
     \caption{Second 2D CNN model}
     \label{fig:Second2DCNN}
 \end{figure}
@@ -208,7 +208,7 @@ model.add(Dense(1, activation='sigmoid'))
     \multicolumn{1}{|c|}{\textbf{First Model}}     & 0,6095            & 0,3238                   & 0,8952                       \\ \hline
     \multicolumn{1}{|c|}{\textbf{Second Model}}    & 0,6238            & 0,5762                   & 0,6714                       \\ \hline
     \multicolumn{1}{|c|}{\textbf{Third Model}}     & 0,55              & 0,1095                   & 0,9905                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Best 2D scratch}} & 0,7048            & 0,9095                   & 0,5                          \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Final model}} & 0,7048            & 0,9095                   & 0,5                          \\ \hline
     \end{tabular}%
     }
     \caption{2D model accuracy and recall}
