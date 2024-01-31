@@ -388,6 +388,14 @@ We decided to train only the two last convolutional blocks, since going at the f
 \end{figure}
 The results obtained are better than the ones in fine tuning, this models also obtains obtains similar results in terms of accuracy and violence recall, to the third ResNet model. 
 We follow this approach unfreezing another half of the fifth convolutional blocks.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ROCEfficientNet.png}
+    \caption{ROC of the EfficientNetB0: fine tuning 1 vs fine tuning 2}
+    \label{fig:EfficientNetB0_ROC}
+\end{figure}
+
 Looking at the ROC curves we cannot draw conclusions on the winner but the AUC is better and also between 0.1 and 0.8 false positive rate the fourth model performs better than the third. 
 
 However we try to push the model to the limit adding another dense layer in order to improve the classifier performance and adding also dropout to avoid overfitting.
