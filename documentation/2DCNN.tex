@@ -1,18 +1,19 @@
 \chapter{2D CNN approach}
-The very fist approach we tried was to develop from scratch a 2D CNN to recognize the violence in the videos, to do that we needed to extract the frame from the videos and feed it to the AI model since a 2D CNN process images.
+The very fist approach we tried was to develop from scratch a 2D CNN to recognize the violence in the videos, to do that we needed to extract the frames from the videos and feed it to the AI model since a 2D CNN processes images.
 \section{Frame extraction}
 The idea initially was to do it with the help of \textit{FFmpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
 \begin{lstlisting}[language=bash, caption={FFmpeg example}, label={lst:FFmpegExample}]
 #!/bin/bash
 # To force the frame rate of the output file to 24 fps:
-$ ffmpeg -i input.avi -r 24 output.avi
+ffmpeg -i input.avi -r 24 output.avi
 
 \end{lstlisting}
 
-Following there is the code used to extract the frames from the videos. For brevity we will show only the code used to extract the frames from the "fight" directory and the path are removed.
+Following there is the code used to extract the frames from the videos. For brevity we will show only the code used to extract the frames from the "fight" directory and the paths are removed.
 \begin{lstlisting}[language=bash, caption={Frame extraction}, label={lst:FrameExtraction}]
-
-    !for f in $(ls [path_to_video]); do ffmpeg -i [path_to_video]/$f -vf fps=5 [path_to_frame]/${f%.*}-%03d.png; done;
+for f in $(ls $path_to_video); do 
+	ffmpeg -i $path_to_video/$f -vf fps=5 $path_to_frame/${f%.*}-%03d.png; 
+done;
 \end{lstlisting}
 
 This command uses FFmpeg to extract frames from a video file and save them as individual images, it iterates over each file in the specified directory and applies the FFmpeg command to convert the video to frames. The frames are saved with the same name as the original video file, followed by a three-digit number to indicate the frame sequence, the frames are saved in the specified output directory.
