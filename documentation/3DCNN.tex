@@ -23,6 +23,12 @@ As explained in the "Frame extraction" section, the pickles approach allowed us 
 \end{figure}
 
 The very first test was done with number of frames (NoF) equal to 5 and fps equal to 5, meaning that the model would received burst of 1 second each. Fig. \ref{fig:First3DCNNconfusionMatrix} shows an interesting result, it is very similar to the best 2D scratch one but it has slightly better recall score in general, but loses al lot regarding the violence recall.
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\textwidth]{images/7f2d-testGiacomo3D9-9fcf-history.png}
+    \caption{History of the first 3D model}
+    \label{fig:First3DCNNHistory}
+\end{figure}
 
 \begin{figure}[]
     \centering
@@ -32,6 +38,13 @@ The very first test was done with number of frames (NoF) equal to 5 and fps equa
 \end{figure}
 
 The second test was done with NoF equal to 10 and fps equal to 5, meaning that the model would received burst of 2 seconds each. This was done to see if the model would improve with more context, since 1 second of video is not a lot especially for the longer ones. 
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\textwidth]{images/ce07-testGiacomo3D3-9fcf-history.png}
+    \caption{History of the second 3D model}
+    \label{fig:Second3DCNNHistory}
+\end{figure}
+
 
 \begin{figure}[]
     \centering
@@ -39,6 +52,7 @@ The second test was done with NoF equal to 10 and fps equal to 5, meaning that t
     \caption{Confusion matrix of the second 3D model}
     \label{fig:Second3DCNNconfusionMatrix}
 \end{figure}
+
 
 Finally the third test was done with NoF equal to 15 and fps equal to 5, meaning that the model would received burst of 3 seconds each. Keep in mind, however, that since some of the original dataset is made of videos shorter than 3 seconds both training and test set are reduced. This means that the result are to be taken lightly since they are not representative of the whole dataset. In addition the previous model needed to be made lighter to avoid making it to complex for the smaller dataset, the new schema can be seen in Fig. \ref{fig:3D3CNNschema}. The result show in Fig. \ref{fig:Third3DCNNconfusionMatrix} is the best one so far, with a very good recall score for both the classes. This is due to the fact that the model has more context to work with and can better understand the situation.
 
@@ -49,6 +63,12 @@ Finally the third test was done with NoF equal to 15 and fps equal to 5, meaning
     \label{fig:3D3CNNschema}
 \end{figure}
 
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\textwidth]{images/7f2d-testGiacomo3D3-9fcf-history.png}
+    \caption{History of the third 3D model}
+    \label{fig:Third3DCNNHistory}
+\end{figure}
 
 \begin{figure}[]
     \centering

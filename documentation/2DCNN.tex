@@ -238,7 +238,7 @@ ResNet50  won the ImageNet Large Scale Visual Recognition Challenge in 2015. It 
 We used ResNet50 with the imagenet weights, and we choose to do 
 \textit{fine tuning}. We started by adding our dense layers for classifications and we only train the last convolutional block.  
 
-\begin{lstlisting}[language=python, caption={ResNet50}, label={lst:resnet50Code}]
+\begin{lstlisting}[language=python, caption={ResNet50 first model code}, label={lst:resnet50Code}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
     for layer in resnet.layers:
@@ -255,7 +255,7 @@ We used ResNet50 with the imagenet weights, and we choose to do
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
-The model shows a promising results, with a good confusion matrix and also with a 76\% recall on violence
+The model shows promising results, with a good confusion matrix (Fig. \ref{fig:ResNet2d1}) and also with a 76\% recall on violence
 
 \begin{figure}[]
     \centering
@@ -265,7 +265,7 @@ The model shows a promising results, with a good confusion matrix and also with 
 \end{figure}
 
 We continued to improve the model adding the layers for data augmentation, however we noticed worse performances compared to the first model and signals of overfitting. 
-\begin{lstlisting}[language=python, caption={ResNet50 Second Test}, label={lst:resnet50CodeSecondTest}]
+\begin{lstlisting}[language=python, caption={ResNet50 Second model code}, label={lst:resnet50CodeSecondTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
     for layer in resnet.layers:
@@ -286,7 +286,7 @@ We continued to improve the model adding the layers for data augmentation, howev
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
-In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model. 
+In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model (Fig. \ref{fig:ROCResnet}). 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/ROCResnet.png}
@@ -294,7 +294,7 @@ In order to fight overfitting we introduced a dropout layer and the overall accu
     \label{fig:ROCResnet}
 \end{figure}
 
-\begin{lstlisting}[language=python, caption={ResNet50 Third test}, label={lst:resnet50CodeThirdTest}]
+\begin{lstlisting}[language=python, caption={ResNet50 Third model code}, label={lst:resnet50CodeThirdTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
     for layer in resnet.layers:
@@ -317,7 +317,7 @@ In order to fight overfitting we introduced a dropout layer and the overall accu
 \end{lstlisting}
 
 
-We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons for a correct classification of the problem. 
+We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons of the second layer for a correct classification of the problem. 
 \begin{lstlisting}[language=python, caption={ResNet50 Fourth test}, label={lst:resnet50CodeFourthTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
@@ -375,7 +375,7 @@ EfficientNetB0 is also suitable for resource-constrained environments like mobil
     \label{fig:EfficientNetB0architecture}
 \end{figure}
 
-The reason we choose EfficientNetB0 is because it can be used in IoT devices, like cameras, for a first filter on images for police operators.
+The reason we choose EfficientNetB0 is because it can be used in IoT devices, like cameras, for a first filter on images for police operators. The net was used with the imagenet weights like ResNet50.
 Instead of going directly to fine tuning we start with a \textit{features extraction} approach.
 We start from the simplest implementation as possible, with only a final dense layer with one neuron with a sigmoid activation function.
 We obtained a 62\% overall accuracy, comparable to the second model of the \emph{scratch} 2D CNN but below both ResNet and the final model. In order to improve the performance of the network we add data augmentation layers and also more dense layers.
@@ -387,12 +387,20 @@ We decided to train only the two last convolutional blocks, since going at the f
     \caption{EfficientNetB0: third model}
     \label{fig:EfficientNetB0_15}
 \end{figure}
-The results obtained are better than the ones in fine tuning, this models also obtains obtains similar results in terms of accuracy and violence recall, to the third ResNet model. 
+The results obtained (Fig. \ref{fig:EfficientNetB0_15}) are better than the ones in fine tuning, this models also obtains obtains similar results in terms of accuracy and violence recall, to the third ResNet model. 
 We follow this approach unfreezing another half of the fifth convolutional blocks.
-Looking at the ROC curves we cannot draw conclusions on the winner but the AUC is better and also between 0.1 and 0.8 false positive rate the fourth model performs better than the third. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ROCEfficientNet.png}
+    \caption{ROC of the EfficientNetB0: fine tuning 1 vs fine tuning 2}
+    \label{fig:EfficientNetB0_ROC}
+\end{figure}
+
+Looking at the ROC curves (Fig. \ref{fig:EfficientNetB0_ROC}) we cannot draw conclusions on the winner but the AUC is better and also between 0.1 and 0.8 false positive rate the fourth model performs better than the third. 
 
 However we try to push the model to the limit adding another dense layer in order to improve the classifier performance and adding also dropout to avoid overfitting.
-We obtain a good model, with a 78\% accuracy with a strong recall on violence, that we used as a second choice parameter. 
+We obtain a good model (Fig. \ref{fig:EfficientNetB0_24}), with a 78\% accuracy with a strong recall on violence, that we used as a second choice parameter. 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/731a-EfficientNetB0_24-b2b1-conf_matrix.png}
