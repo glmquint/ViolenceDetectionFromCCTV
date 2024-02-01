@@ -1,7 +1,7 @@
 \chapter{2D CNN approach}
-The very fist approach we tried was to develop from scratch a 2D CNN to recognize the violence in the videos, to do that we needed to extract the frames from the videos and feed it to the AI model since a 2D CNN processes images.
+The very fist approach we tried was to develop from scratch a 2D CNN to recognize the frames of a video containing a scene of violence, to do that we needed to extract the frames from the videos and feed them to the AI model since a 2D CNN processes images.
 \section{Frame extraction}
-The idea initially was to do it with the help of \textit{FFmpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
+The idea initially was to extract all frames with the help of \textit{FFmpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
 \begin{lstlisting}[language=bash, caption={FFmpeg example}, label={lst:FFmpegExample}]
 #!/bin/bash
 # To force the frame rate of the output file to 24 fps:
@@ -9,7 +9,7 @@ ffmpeg -i input.avi -r 24 output.avi
 
 \end{lstlisting}
 
-Following there is the code used to extract the frames from the videos. For brevity we will show only the code used to extract the frames from the "fight" directory and the paths are removed.
+Following there is the code used to extract the frames from the videos. For brevity we will show only the code used to extract the frames from the "fight" directory and the actual paths are removed.
 \begin{lstlisting}[language=bash, caption={Frame extraction}, label={lst:FrameExtraction}]
 for f in $(ls $path_to_video); do 
 	ffmpeg -i $path_to_video/$f -vf fps=5 $path_to_frame/${f%.*}-%03d.png; 
@@ -100,10 +100,10 @@ def crop(image, y_nonzero, x_nonzero):
     return cropped_image, y_nonzero, x_nonzero
 \end{lstlisting}
 
-However this proved to be not enough, the dataset was still very noisy: elements like writings over the videos, some rare mislabeled frames and other problems increased the difficulty for models to learn the correct features. An initial approach for frame cropping involved a simple cut-out of the largest square centered in the frame to prevent distortion, but this resulted in the exclusion of many areas of action for all those videos containing violence on the edge of the screen. The final approach introduces a light distortion with respect to the original source, but we preserve all relevant information, discarding all rows and columns of pixels containing pure black values. For future works on the subject, it would be ideal to aggregate a much more comprehensive dataset, which would include bounding boxes to better identify the actual areas of action.
+However this proved to be not enough, the dataset was still very noisy: elements like writings over the videos and some rare mislabeled frames increased the difficulty for models to learn the correct features. An initial approach for frame cropping involved a simple cut-out of the largest square centered with the frame to prevent distortion, but this resulted in the exclusion of many areas of action for all those videos containing violence on the edge of the screen. The final approach introduces a light distortion with respect to the original source, but we preserve all relevant information, discarding all rows and columns of pixels containing pure black values. For future works on the subject, it would be better to aggregate a much more comprehensive dataset, which would include bounding boxes to better identify the actual areas of action.
 
 \section{First model}
-For the first model we decided to use a very simple 2D CNN, the model was composed of 2 convolutional layers, 2 max pooling layers and 1 dense layer, the model was trained for 100 epochs with a batch size of 32 samples. To avoid overfitting, we used the Early Stopping technique with patience set to 15, after an initial warm-up period of 5 epochs; we also set the \textit{restore best weight} flag to save the best model before the validation loss increase. The optimizer used was Adam. This parameters were found to be performing best from early experimentation runs. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence, the model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
+For the first model we decided to use a very simple 2D CNN. The model was composed of 2 convolutional layers, 2 max pooling layers and 1 dense layer. The model was trained for 100 epochs with a batch size of 32 samples. To avoid overfitting, we used the Early Stopping technique with patience set to 15, after an initial warm-up period of 5 epochs; we also set the \textit{restore best weight} flag to save the best model before the validation loss increase. The optimizer used was Adam, a popular optimization algorithm which estimates the first and second moments of the gradients. This parameters were found to be performing best from early experimentation runs. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence. The model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
 
 \begin{figure}[]
     \centering
@@ -127,15 +127,15 @@ For the first model we decided to use a very simple 2D CNN, the model was compos
 \end{figure}
 
 
-The first comment to be made is that the confusion matrix is heavily bias towards the \textit{Non violence} class. This is due to the fact that the dataset can be quite chaotic and the model is not able to learn the features of the videos. For example the model may learn form the Non violence part of the dataset that gatherings of people are not to be flagged as violence, however this could easily lead to many false negatives (Violence images classified as Non violence ones).
+The first comment to be made is that the confusion matrix is heavily biased towards the \textit{Non violence} class. This is due to the fact that the dataset can be quite chaotic and the model is not able to learn all relevant features from the videos. For example the model may learn form the Non violence part of the dataset that gatherings of people are not to be flagged as violence, however this could easily lead to many false negatives (Violence images classified as Non violence ones).
 
 Another comment is to be made regarding the validation loss and accuracy, which is quite low in both cases, this could signal overfitting and general failing in extrapolating the main features of the videos. Since the training accuracy is almost immediately we can assume that the dataset is too small and the model starts to overfit in the first epochs.
 \pagebreak
 \section{Second model - data augmentation}
-For the second model we decided to keep the convolution layers to 2, add a dense layer and, most importantly, to add random\_flip(horizontal) and random\_rotation(0.1)  as shown in Fig. \ref{fig:Second2DCNN} to make it harder for the model to overfit immediately. All other parameters remained unchanged: this was done to see if the model would have been able to produce better results. 
-We decided to use a cautious approach since the problem presented itself as a very complicated one and we did not want to aport to many changes in a single \textit{pass} to avoid a time consuming trial and error process. 
+For the second model we decided to keep the convolution layers to 2, add a dense layer and, most importantly, perform data augmentation by adding random\_flip(horizontal) and random\_rotation(0.1)  as shown in Fig. \ref{fig:Second2DCNN} to make it harder for the model to overfit immediately by memorizing the entire training dataset. All other parameters remained unchanged: this was done to see if the model would have been able to produce better results. 
+We decided to use a cautious approach since the problem presented itself as a very complicated one and we did not want to bring many changes in a single \textit{pass} to avoid a time consuming trial and error process. 
 
-Speaking of results the model no longer saturates training accuracy immediately, this could be a sign of a better generalization capability, however the model still has a very low validation accuracy meaning that the model is still not able to generalize well. The confusion matrix is shown in Fig. \ref{fig:Second2DCNNMatrix}, the model is still heavily biased towards the \textit{Non violence} class, this is due to the fact that the dataset is very noisy and the model is not able to learn the features of the videos.
+Speaking of results, the model no longer immediately saturates the training accuracy: this could be a sign of a better generalization capability, however the model still has a very low validation accuracy,  meaning that the model is still not able to solve the problem very well. The confusion matrix is shown in Fig. \ref{fig:Second2DCNNMatrix}, the model is still heavily biased towards the \textit{Non violence} class, this is due to the fact that the dataset is very noisy and the model is not able to learn the features of the videos.
 
 \begin{figure}[]
     \centering
@@ -162,7 +162,7 @@ Speaking of results the model no longer saturates training accuracy immediately,
 
 \pagebreak
 \section{Third model - \textit{upgrading} the model}
-Based on the results of the previous models we decided to try to \textit{upgrade} the model, this was done for two main reasons. The first one was to test the behavior of it in case of a more capable model. The second one was that, since the last results were not satisfactory especially in the validation accuracy, we thought the model were possibly overfitting, but it was doing it on the wrong features possibly like background, writings and other things. So we decide to amp the model capabilities as show in Fig. \ref{fig:Third2DCNN}.
+Based on the results of the previous models, we decided to trying to \textit{upgrade} the model, this was done for two main reasons. The first one was to test the behavior of a more capable model to tackle this difficult problem. The second one was that, since the last results were not satisfactory, especially in the validation accuracy, we thought that the model was possibly getting stuck on a single result, regardless of the actual features extracted from the frames. Therefore we decide to amp the model capabilities as show in Fig. \ref{fig:Third2DCNN}. 
 \begin{figure}[]
     \centering
     \includegraphics[width=0.8\textwidth, height=0.8\textwidth, keepaspectratio]{images/simple3augConv8_64Dense128_64nozoom.png}
