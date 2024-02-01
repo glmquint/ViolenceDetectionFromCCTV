@@ -184,31 +184,58 @@ Moving to the results of the model we can see in Fig. \ref{fig:Third2DCNNMatrix}
     \label{fig:Third2DCNNMatrix}
 \end{figure}
 \pagebreak
-\section{Fifth model}
+\section{Final model}
+After various test we produced the model shown in Fig. \ref{fig:Final2DCNN} and Fig. \ref{fig:Final2DCNN2}.
+
+The model is presents itself with may dense layer and a single dropout layer. The convolutional layer are mostly unchanged. The model was trained for 100 epochs with a batch size of 32 samples as the previous ones until now. The results obtain show a 62\% accuracy which is the highest one so far excluding the first model which was heavily biased towards the \textit{Non violence} class and also was clearly overfitting. The main issue of this model remains the violence recall which is still too low to satisfy our needs, in fact a score of 49\% is clearly unsatisfactory. The confusion matrix is shown in Fig. \ref{fig:Final2DCNNMatrix}. Regarding the training history shown in Fig. \ref{fig:Final2DCNNHistory} we can see that the model quickly starts to overfit, but an increase in dropout layer or weight decay did not improve the results.
+
+%TODO: add the code of the model
+\iffalse
+\begin{figure}[]
+    \centering
+    \includegraphics[scale=0.05]{images/medium7Dropout4SchemaTop.png}
+    \caption{Final 2D CNN model}
+    \label{fig:Final2DCNN}
+\end{figure}
+
+\begin{figure}[]
+    \centering
+    \includegraphics[scale=0.05]{images/medium7Dropout4SchemaBottom.png}
+    \caption{Final 2D CNN model}
+    \label{fig:Final2DCNN2}
+\end{figure}
+\fi
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=1\textwidth]{images/731a-medium7Dropout4-b538-history.png}
+    \caption{Training history of the final model}
+    \label{fig:Third2DCNNHistory}
+\end{figure}
+\begin{figure}[]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/731a-medium7Dropout4-b538-conf_matrix.png}
+    \caption{Confusion matrix of the final model}
+    \label{fig:Final2DCNNMatrix}
+\end{figure}
+
 Instead of further complicating the model we decided to simplify it to avoid the phenomenon of overfitting. The fifth model is the simplest one and has decent result, with a good recall but produces a large number of false positive as shown in  Fig. \ref{fig:FifthModelConfMatrix}. Even if this model leads to a higher accuracy and Violence recall than the previous ones, the poor Non violence recall score is too low to be considered a good model. In Tab. \ref{tab:2DCNNTable} there is a recap of the accuracy and recall of the models. The code of the fifth model is shown in the following listing: 
 
-\begin{lstlisting}[language=python, caption={Fifth model}, label={lst:Fifth model}]
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dense(128, activation='relu'))
-model.add(Dense(64, activation='relu'))
-model.add(Dense(32, activation='relu'))
-model.add(Dense(1, activation='sigmoid'))
-\end{lstlisting}
+
 \begin{table}[]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{c|c|c|c|}
     \cline{2-4}
                                                    & \textbf{Accuracy} & \textbf{Violence recall} & \textbf{Non violence recall} \\ \hline
-    \multicolumn{1}{|c|}{\textbf{First Model}}     & 0,6095            & 0,3238                   & 0,8952                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Second Model}}    & 0,6238            & 0,5762                   & 0,6714                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Third Model}}     & 0,55              & 0,1095                   & 0,9905                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Final model}} & 0,7048            & 0,9095                   & 0,5                          \\ \hline
+    \multicolumn{1}{|c|}{\textbf{First Model}}     & 0,65238            & 0,39524                   & 0,90952 \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Second Model}}    & 0,49285            & 0,41429                   & 0,57143                       \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Third Model}}     & 0,59285
+              & 0,57619                   & 0,60952 \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Final model}} & 0,62619            & 0,49048                   & 0,7619                          \\ \hline
     \end{tabular}%
     }
-    \caption{2D model accuracy and recall}
+    \caption{2D models accuracy and recall}
     \label{tab:2DCNNTable}
 \end{table}
 
