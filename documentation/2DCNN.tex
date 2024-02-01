@@ -103,25 +103,25 @@ def crop(image, y_nonzero, x_nonzero):
 However this proved to be not enough, the dataset was still very noisy: elements like writings over the videos, some rare mislabeled frames and other problems increased the difficulty for models to learn the correct features. An initial approach for frame cropping involved a simple cut-out of the largest square centered in the frame to prevent distortion, but this resulted in the exclusion of many areas of action for all those videos containing violence on the edge of the screen. The final approach introduces a light distortion with respect to the original source, but we preserve all relevant information, discarding all rows and columns of pixels containing pure black values. For future works on the subject, it would be ideal to aggregate a much more comprehensive dataset, which would include bounding boxes to better identify the actual areas of action.
 
 \section{First model}
-For the first model we decided to use a 2D CNN, the model was composed of 2 convolutional layers, 2 max pooling layers and 2 fully connected layers, the model was trained for 30 epochs with a batch size of 32 samples. To avoid overfitting, we used the Early Stopping technique with patience set to 15, after an initial warm-up period of 5 epochs; we also set the \textit{restore best weight} flag to save the best model before the validation loss increase. The optimizer used was Adam. This parameters were found to be performing best from early experimentation runs. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence, the model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
+For the first model we decided to use a very simple 2D CNN, the model was composed of 2 convolutional layers, 2 max pooling layers and 1 dense layer, the model was trained for 100 epochs with a batch size of 32 samples. To avoid overfitting, we used the Early Stopping technique with patience set to 15, after an initial warm-up period of 5 epochs; we also set the \textit{restore best weight} flag to save the best model before the validation loss increase. The optimizer used was Adam. This parameters were found to be performing best from early experimentation runs. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence, the model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/2D_3_noDrop.png}
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/simple3.png}
     \caption{Initial 2D CNN model}
     \label{fig:First2DCNN}
 \end{figure}
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=1\textwidth]{images/731a-2D3-86ad-history.png}
+    \includegraphics[width=1\textwidth]{images/731a-simple3-b538-history.png}
     \caption{Training history of the first model}
     \label{fig:First2DCNNHistory}
 \end{figure}
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/731a-2D3-86ad-conf_matrix.png}
+    \includegraphics[width=0.8\textwidth]{images/731a-simple3-b538-conf_matrix.png}
     \caption{Confusion matrix of the first model}
     \label{fig:First2DCNNConfusionMatrix}
 \end{figure}
@@ -129,30 +129,17 @@ For the first model we decided to use a 2D CNN, the model was composed of 2 conv
 
 The first comment to be made is that the confusion matrix is heavily bias towards the \textit{Non violence} class. This is due to the fact that the dataset can be quite chaotic and the model is not able to learn the features of the videos. For example the model may learn form the Non violence part of the dataset that gatherings of people are not to be flagged as violence, however this could easily lead to many false negatives (Violence images classified as Non violence ones).
 
-Another comment is to be made regarding the validation loss and accuracy, which is quite unstable and unsatisfactory, this could signal overfitting and general failing in extrapolating the main features of the videos.
+Another comment is to be made regarding the validation loss and accuracy, which is quite low in both cases, this could signal overfitting and general failing in extrapolating the main features of the videos. Since the training accuracy is almost immediately we can assume that the dataset is too small and the model starts to overfit in the first epochs.
 \pagebreak
-\section{Second model}
-For the second model we decided to amp the convolution layers to 3 as shown in Fig. \ref{fig:Second2DCNN}. All other parameters remained unchanged: this was done to see if the model would have been able to learn more features from the videos. 
-We decided to use a cautious approach since the problem presented itself as a very complicated one and we did not want to aport to many changes in a single \textit{pass} to avoid a time consuming trial and error process. As can be seen in Tab. \ref{tab:2DConfront} the second model performed better than the first one by a small margin, but alas the confusion matrix is more balanced in respect to the first one, this could indicate a better generalization capability. Speaking of generalization capability, the validation loss and accuracy are still quite unstable and unsatisfactory as shown in Fig. \ref*{fig:Second2DCNNHistory}, so this must be addressed in the next models.
-\begin{table}[H]
-    \centering
-    \resizebox{\textwidth}{!}{%
-    \begin{tabular}{c|ccc|ccc|}
-    \cline{2-7}
-                                                & \multicolumn{3}{c|}{\textbf{FIRST MODEL}}                                                          & \multicolumn{3}{c|}{\textbf{SECOND MODEL}}                                                         \\ \cline{2-7} 
-                                                & \multicolumn{1}{c|}{\textbf{PRECISION}} & \multicolumn{1}{c|}{\textbf{RECALL}} & \textbf{F1-SCORE} & \multicolumn{1}{c|}{\textbf{PRECISION}} & \multicolumn{1}{c|}{\textbf{RECALL}} & \textbf{F1-SCORE} \\ \hline
-    \multicolumn{1}{|c|}{\textbf{ACCURACY}}     & \multicolumn{1}{c|}{}                   & \multicolumn{1}{c|}{}                & \textbf{0.60952}  & \multicolumn{1}{c|}{}                   & \multicolumn{1}{c|}{}                & \textbf{0.62381}  \\ \hline
-    \multicolumn{1}{|c|}{\textbf{MACRO AVG}}    & \multicolumn{1}{c|}{0.66163}            & \multicolumn{1}{c|}{0.60952}         & 0.57481           & \multicolumn{1}{c|}{0.62494}            & \multicolumn{1}{c|}{0.62381}         & 0.62295           \\ \hline
-    \multicolumn{1}{|c|}{\textbf{WEIGHTED AVG}} & \multicolumn{1}{c|}{0.66263}            & \multicolumn{1}{c|}{0.60952}         & 0.57481           & \multicolumn{1}{c|}{0.62494}            & \multicolumn{1}{c|}{0.62381}         & 0.62295           \\ \hline
-    \end{tabular}%
-    }
-    \caption{Confront between the two models}
-    \label{tab:2DConfront}
-    \end{table}
+\section{Second model - data augmentation}
+For the second model we decided to keep the convolution layers to 2, add a dense layer and, most importantly, to add random\_flip(horizontal) and random\_rotation(0.1)  as shown in Fig. \ref{fig:Second2DCNN} to make it harder for the model to overfit immediately. All other parameters remained unchanged: this was done to see if the model would have been able to produce better results. 
+We decided to use a cautious approach since the problem presented itself as a very complicated one and we did not want to aport to many changes in a single \textit{pass} to avoid a time consuming trial and error process. 
+
+Speaking of results the model no longer saturates training accuracy immediately, this could be a sign of a better generalization capability, however the model still has a very low validation accuracy meaning that the model is still not able to generalize well. The confusion matrix is shown in Fig. \ref{fig:Second2DCNNMatrix}, the model is still heavily biased towards the \textit{Non violence} class, this is due to the fact that the dataset is very noisy and the model is not able to learn the features of the videos.
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/2D_35_noDrop.png}
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/simple4augnozoom.png}
     \caption{Second 2D CNN model}
     \label{fig:Second2DCNN}
 \end{figure}
@@ -160,7 +147,7 @@ We decided to use a cautious approach since the problem presented itself as a ve
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=1\textwidth]{images/731a-2D35-86ad-history.png}
+    \includegraphics[width=1\textwidth]{images/731a-simple4augnozoom-b538-history.png}
     \caption{Training history of the second model}
     \label{fig:Second2DCNNHistory}
 \end{figure}
@@ -168,23 +155,31 @@ We decided to use a cautious approach since the problem presented itself as a ve
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/731a-2D35-86ad-conf_matrix.png}
+    \includegraphics[width=0.8\textwidth]{images/731a-simple4augnozoom-b538-conf_matrix.png}
     \caption{Confusion matrix of the second model}
     \label{fig:Second2DCNNMatrix}
 \end{figure}
 
 \pagebreak
-\section{Addressing the generalization problem}
-As previously stated the generalization problem was a constant one, to addressed this we decide to add dropout layers in the model, we also decided to, according to common practice, decrease the number of dense layers. The other parameters remained unchanged. Unfortunately this did not solve the problem as shown in Fig. \ref{fig:Third2DCNNHistory} and Fig. \ref{fig:Third2DCNNMatrix}, the model is still not able to generalize well, this could be due to the fact that the dataset is too small and too dirty or the problem could be too hard to solve with a \textit{simple} 2D CNN, to achieve a better solution we would have needed a bigger dataset, but this was not available to us.
+\section{Third model - \textit{upgrading} the model}
+Based on the results of the previous models we decided to try to \textit{upgrade} the model, this was done for two main reasons. The first one was to test the behavior of it in case of a more capable model. The second one was that, since the last results were not satisfactory especially in the validation accuracy, we thought the model were possibly overfitting, but it was doing it on the wrong features possibly like background, writings and other things. So we decide to amp the model capabilities as show in Fig. \ref{fig:Third2DCNN}.
 \begin{figure}[]
     \centering
-    \includegraphics[width=1\textwidth]{images/731a-2DFabioFinal-86ad-history.png}
+    \includegraphics[width=0.8\textwidth, height=0.8\textwidth, keepaspectratio]{images/simple3augConv8_64Dense128_64nozoom.png}
+    \caption{Third 2D CNN model}
+    \label{fig:Third2DCNN}
+\end{figure}
+
+Moving to the results of the model we can see in Fig. \ref{fig:Third2DCNNMatrix} that the confusion matrix is now more balanced than the previous ones, with an accuracy rate of almost 60\%. However the recall value are still not good enough, especially the violence one with a score of 57\%. Another thing to notice is the training history graph in Fig. \ref{fig:Third2DCNNHistory}, where the validation loss and accuracy are very unstable. This lead us to the conclusion that the model is now overfitting on the right features, so the next logical step is to try to fight it with dropout layers.
+\begin{figure}[]
+    \centering
+    \includegraphics[width=1\textwidth]{images/731a-simple3augConv8_64Dense128_64nozoom-b538-history.png}
     \caption{Training history of the third model}
     \label{fig:Third2DCNNHistory}
 \end{figure}
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/731a-2DFabioFinal-86ad-conf_matrix.png}
+    \includegraphics[width=0.8\textwidth]{images/731a-simple3augConv8_64Dense128_64nozoom-b538-conf_matrix.png}
     \caption{Confusion matrix of the third model}
     \label{fig:Third2DCNNMatrix}
 \end{figure}
