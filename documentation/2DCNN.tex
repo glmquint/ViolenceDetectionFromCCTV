@@ -17,7 +17,7 @@ done;
 \end{lstlisting}
 
 This command uses FFmpeg to extract frames from a video file and save them as individual images, it iterates over each file in the specified directory and applies the FFmpeg command to convert the video to frames. The frames are saved with the same name as the original video file, followed by a three-digit number to indicate the frame sequence, the frames are saved in the specified output directory.
-However, this method was found to not be flexible enough, in the light of new approach to the problem like a 3D CNN, more in the next chapter, so we decided to use a different approach, we decided extract the frames at runtime and feed them to the AI model with differences depending on the model and type of dataset fed to it. However this would have been to much of a workload, especially if we executed every time, so we decided to create a sort of cache made of pickle files \textit{.pkl}, this way we would have extracted the frames only once and then we would have loaded them. The following code shows the basic idea of the frame extraction process:
+However, this method was found to not be flexible enough, in the light of new approach to the problem like a 3D CNN, more in the next chapter, so we decided to use a different approach, we decided extract the frames at runtime and feed them to the AI model with differences depending on the model and type of dataset fed to it. However performing the frame extraction each time we wanted to train a network would have been too much of a workload. We decided instead to separate the extraction phase from the training phase and save a serialized copy of the preprocessed dataset on files, through the help of the \textit{pickle} library in Python. The following code shows the basic idea of the frame extraction process:
 
 \begin{lstlisting}[language=python, caption={Pickles generation}, label={lst:PicklesGeneration}]
     # Function to load a dataset of videos with corresponding labels
@@ -72,7 +72,7 @@ However, this method was found to not be flexible enough, in the light of new ap
     
 
 \end{lstlisting}
-The main idea is to create a 4 pickle files for each configuration (train\_data, train\_label, test\_data, test\_label), the pickle files are created only if they are not present, this way we can load them at runtime and avoid the frame extraction process. In case of creation needed, the frames are shuffled and then balanced, this is done to avoid deleting always the same videos. This process allows us not only to create pickles for 2D CNN but also for 3D CNN. The \textit{pkl\_config} parameters contains a dictionary with the following information:
+The main idea is to create 4 pickle files for each configuration (train\_data, train\_label, test\_data, test\_label), the pickle files are created only if they are not present, this way we can load them at runtime and avoid the frame extraction process. In case of creation needed, the videos are shuffled before the extraction phase. In this way, after the balancing process to obtain the same number of samples from the \textit{violence} and \textit{non violence} categories, we avoid removing only certain videos coming from a specific source. This process is flexible enough to allow us to create pickles for both 2D CNNs and 3D CNNs too. In the 3D case, the samples consist in a burst of consecutive frames. The \textit{pkl\_config} parameters contains a dictionary with the following information:
 \begin{itemize}
 	\item frame size
 	\item number of frames
@@ -80,13 +80,14 @@ The main idea is to create a 4 pickle files for each configuration (train\_data,
 	\item fps
 	\item crop
 \end{itemize}
-The \textit{frame size} is the size of the frame, the \textit{number of frames} is the number of frames to be extracted from the video for each \textit{burst}, the \textit{train split} is the split between training and testing, the \textit{fps} is the frame per second of the video, for example if we want to train a 2D CNN both the \textit{number of frames} and the \textit{fps} will be 1, if we want to train a 3D CNN with burst of 2 seconds we will set the \textit{number of frames} to 10 and the \textit{fps} to 5. The \textit{crop} is a boolean value that indicates if the frame should be cropped or not to remove the black bars, more on that later.
+The \textit{frame size} specifies the height and width dimensions of the squared frame. The \textit{number of frames} is the number of frames to be extracted from the video for each \textit{burst}. The \textit{train split} is the fractional split between training and testing. The \textit{fps} is the frame per second of the video, for example if we want to train a 2D CNN both the \textit{number of frames} and the \textit{fps} will be 1, if we want to train a 3D CNN with burst of 2 seconds we might set the \textit{number of frames} to 10 and the \textit{fps} to 5. The \textit{crop} is a boolean value that indicates if the frame should be cropped or not to remove the black bars, as explained in section \ref{sec:datasetcleaning}.
 
 \section{Dataset cleaning}
-As previously stated the dataset was very dirty, this problem would be a constant problem throughout the project, the dataset was composed of videos of different length, different resolution and different frame rate, in addition many videos contained black bars on the sides making any AI model learn from that instead of the actual features. To solve this problem we decided to crop the videos remove the black bars, this was done with the following code:
+\label{sec:datasetcleaning}
+The dataset was very dirty. This fact resulted in many difficulties throughout the project development: the dataset was composed of videos of different lengths, different resolutions and different frame rates. Furthermore, many videos contained black bars on the sides, making many AI models learn from them instead of the actual features. To solve this problem we decided to crop the videos removing black bars, this was done with the following code:
 
 \begin{lstlisting}[language=Python, caption={Image Cropper}, label={lst:ImageCropper}]
-    def crop(image, y_nonzero, x_nonzero):
+def crop(image, y_nonzero, x_nonzero):
     # If y_nonzero and x_nonzero are not provided, calculate them from the grayscale version of the image
     if y_nonzero is None or x_nonzero is None:
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -99,10 +100,10 @@ As previously stated the dataset was very dirty, this problem would be a constan
     return cropped_image, y_nonzero, x_nonzero
 \end{lstlisting}
 
-However this proved to be not enough, the dataset was still very dirty, as previously said, things like writings in the videos, \textit{fake} violence frames and other problems increased the difficulty for the model to learn the correct features. Ideally we could crop the videos in a square shape starting from the center, but this would cause a too big of a loss of information, especially if we consider that the video are not centered on the violent actions. The best solution would be to have bounding boxes for each video, but alas this was not the case and to manually made it would have been too much of a workload.
+However this proved to be not enough, the dataset was still very noisy: elements like writings over the videos, some rare mislabeled frames and other problems increased the difficulty for models to learn the correct features. An initial approach for frame cropping involved a simple cut-out of the largest square centered in the frame to prevent distortion, but this resulted in the exclusion of many areas of action for all those videos containing violence on the edge of the screen. The final approach introduces a light distortion with respect to the original source, but we preserve all relevant information, discarding all rows and columns of pixels containing pure black values. For future works on the subject, it would be ideal to aggregate a much more comprehensive dataset, which would include bounding boxes to better identify the actual areas of action.
 
 \section{First model}
-For the first model we decided to use a 2D CNN, the model was composed of 2 convolutional layers, 2 max pooling layers and 2 fully connected layers, the model was trained for 30 epochs with a batch size of 32, patient 15 and the restore best weight flag, the optimizer used was Adam. This parameters were found to be the best from early experimentation runs. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence, the model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
+For the first model we decided to use a 2D CNN, the model was composed of 2 convolutional layers, 2 max pooling layers and 2 fully connected layers, the model was trained for 30 epochs with a batch size of 32 samples. To avoid overfitting, we used the Early Stopping technique with patience set to 15, after an initial warm-up period of 5 epochs; we also set the \textit{restore best weight} flag to save the best model before the validation loss increase. The optimizer used was Adam. This parameters were found to be performing best from early experimentation runs. The model was trained on the dataset with the black bars removed, the dataset was composed of 2 classes, violence and no-violence, the model was trained on 80\% of the dataset and tested on the remaining 20\%, the validation set was 30\% of the training set with a hold out methodology.  
 
 \begin{figure}[]
     \centering
@@ -126,12 +127,12 @@ For the first model we decided to use a 2D CNN, the model was composed of 2 conv
 \end{figure}
 
 
-The first comment to be made is that the confusion matrix is heavily bias towards the \textit{Non violence} side. This is due to the fact that the dataset can be quite chaotic and the model is not able to learn the features of the videos. For example the model may learn form the Non violence part of the dataset that gatherings of people are not to be flagged as violence, however this could easily lead to false positive (Violence images classified as Non violence ones).
+The first comment to be made is that the confusion matrix is heavily bias towards the \textit{Non violence} class. This is due to the fact that the dataset can be quite chaotic and the model is not able to learn the features of the videos. For example the model may learn form the Non violence part of the dataset that gatherings of people are not to be flagged as violence, however this could easily lead to many false negatives (Violence images classified as Non violence ones).
 
-Another comment is to be made regarding the validation loss and accuracy which is quite unstable and unsatisfactory, this could signal overfitting and general failing in extrapolating the main features of the videos.
+Another comment is to be made regarding the validation loss and accuracy, which is quite unstable and unsatisfactory, this could signal overfitting and general failing in extrapolating the main features of the videos.
 \pagebreak
 \section{Second model}
-For the second model we decided to amp the convolution layers to 3 as shown in Fig. \ref{fig:Second2DCNN}, other parameters remained unchanged this was done to see if the model would have been able to learn more features from the videos. 
+For the second model we decided to amp the convolution layers to 3 as shown in Fig. \ref{fig:Second2DCNN}. All other parameters remained unchanged: this was done to see if the model would have been able to learn more features from the videos. 
 We decided to use a cautious approach since the problem presented itself as a very complicated one and we did not want to aport to many changes in a single \textit{pass} to avoid a time consuming trial and error process. As can be seen in Tab. \ref{tab:2DConfront} the second model performed better than the first one by a small margin, but alas the confusion matrix is more balanced in respect to the first one, this could indicate a better generalization capability. Speaking of generalization capability, the validation loss and accuracy are still quite unstable and unsatisfactory as shown in Fig. \ref*{fig:Second2DCNNHistory}, so this must be addressed in the next models.
 \begin{table}[H]
     \centering
@@ -238,7 +239,7 @@ ResNet50  won the ImageNet Large Scale Visual Recognition Challenge in 2015. It 
 We used ResNet50 with the imagenet weights, and we choose to do 
 \textit{fine tuning}. We started by adding our dense layers for classifications and we only train the last convolutional block.  
 
-\begin{lstlisting}[language=python, caption={ResNet50 first model code}, label={lst:resnet50Code}]
+\begin{lstlisting}[language=python, caption={ResNet50}, label={lst:resnet50Code}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
     for layer in resnet.layers:
@@ -255,7 +256,7 @@ We used ResNet50 with the imagenet weights, and we choose to do
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
-The model shows promising results, with a good confusion matrix (Fig. \ref{fig:ResNet2d1}) and also with a 76\% recall on violence
+The model shows a promising results, with a good confusion matrix and also with a 76\% recall on violence
 
 \begin{figure}[]
     \centering
@@ -265,7 +266,7 @@ The model shows promising results, with a good confusion matrix (Fig. \ref{fig:R
 \end{figure}
 
 We continued to improve the model adding the layers for data augmentation, however we noticed worse performances compared to the first model and signals of overfitting. 
-\begin{lstlisting}[language=python, caption={ResNet50 Second model code}, label={lst:resnet50CodeSecondTest}]
+\begin{lstlisting}[language=python, caption={ResNet50 Second Test}, label={lst:resnet50CodeSecondTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
     for layer in resnet.layers:
@@ -286,7 +287,7 @@ We continued to improve the model adding the layers for data augmentation, howev
     model.add(Dense(1, activation='sigmoid'))
 \end{lstlisting}
 
-In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model (Fig. \ref{fig:ROCResnet}). 
+In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model. 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/ROCResnet.png}
@@ -294,7 +295,7 @@ In order to fight overfitting we introduced a dropout layer and the overall accu
     \label{fig:ROCResnet}
 \end{figure}
 
-\begin{lstlisting}[language=python, caption={ResNet50 Third model code}, label={lst:resnet50CodeThirdTest}]
+\begin{lstlisting}[language=python, caption={ResNet50 Third test}, label={lst:resnet50CodeThirdTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
     for layer in resnet.layers:
@@ -317,7 +318,7 @@ In order to fight overfitting we introduced a dropout layer and the overall accu
 \end{lstlisting}
 
 
-We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons of the second layer for a correct classification of the problem. 
+We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons for a correct classification of the problem. 
 \begin{lstlisting}[language=python, caption={ResNet50 Fourth test}, label={lst:resnet50CodeFourthTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
@@ -375,7 +376,7 @@ EfficientNetB0 is also suitable for resource-constrained environments like mobil
     \label{fig:EfficientNetB0architecture}
 \end{figure}
 
-The reason we choose EfficientNetB0 is because it can be used in IoT devices, like cameras, for a first filter on images for police operators. The net was used with the imagenet weights like ResNet50.
+The reason we choose EfficientNetB0 is because it can be used in IoT devices, like cameras, for a first filter on images for police operators.
 Instead of going directly to fine tuning we start with a \textit{features extraction} approach.
 We start from the simplest implementation as possible, with only a final dense layer with one neuron with a sigmoid activation function.
 We obtained a 62\% overall accuracy, comparable to the second model of the \emph{scratch} 2D CNN but below both ResNet and the final model. In order to improve the performance of the network we add data augmentation layers and also more dense layers.
@@ -387,20 +388,12 @@ We decided to train only the two last convolutional blocks, since going at the f
     \caption{EfficientNetB0: third model}
     \label{fig:EfficientNetB0_15}
 \end{figure}
-The results obtained (Fig. \ref{fig:EfficientNetB0_15}) are better than the ones in fine tuning, this models also obtains obtains similar results in terms of accuracy and violence recall, to the third ResNet model. 
+The results obtained are better than the ones in fine tuning, this models also obtains obtains similar results in terms of accuracy and violence recall, to the third ResNet model. 
 We follow this approach unfreezing another half of the fifth convolutional blocks.
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.8\textwidth]{images/ROCEfficientNet.png}
-    \caption{ROC of the EfficientNetB0: fine tuning 1 vs fine tuning 2}
-    \label{fig:EfficientNetB0_ROC}
-\end{figure}
-
-Looking at the ROC curves (Fig. \ref{fig:EfficientNetB0_ROC}) we cannot draw conclusions on the winner but the AUC is better and also between 0.1 and 0.8 false positive rate the fourth model performs better than the third. 
+Looking at the ROC curves we cannot draw conclusions on the winner but the AUC is better and also between 0.1 and 0.8 false positive rate the fourth model performs better than the third. 
 
 However we try to push the model to the limit adding another dense layer in order to improve the classifier performance and adding also dropout to avoid overfitting.
-We obtain a good model (Fig. \ref{fig:EfficientNetB0_24}), with a 78\% accuracy with a strong recall on violence, that we used as a second choice parameter. 
+We obtain a good model, with a 78\% accuracy with a strong recall on violence, that we used as a second choice parameter. 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/731a-EfficientNetB0_24-b2b1-conf_matrix.png}
