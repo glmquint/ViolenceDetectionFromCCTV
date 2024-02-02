@@ -1,5 +1,5 @@
 \chapter{Introduction}
-The goal of this project is to develop a CNN capable of recognizing the presence of violence in the everyday CCTV footage in a binary detection system (violence/non violence). In the world of today it is fundamental for police and other forces to have a quick response in case of violent and criminal behavior especially when the people involved cannot dial the emergency lines due to immediate danger. The main idea it would be for these kind of AI algorithm to process enormous amount of video and signal it in case of foul play in real time. This project presented itself as a very difficult one due to the "\textit{dirtiness}" of the data-set used that, due to the fact the it was composed of real life CCTV footage, was not standardized, contained a lot o noise and many more other problems that will be explained in the next section.
+The goal of this project is to develop a CNN capable of recognizing the presence of violence in the everyday CCTV footage in a binary detection system (violence/non violence). In the world of today it is fundamental for police and other forces to have a quick response in case of violent or criminal behavior especially when the people involved cannot dial the emergency lines due to immediate danger. The main idea would be for these kind of AI algorithms to process enormous amount of videos and signal them in case of foul play in real time. This project presented itself as a very difficult one due to the "\textit{dirtiness}" of the dataset used which, due to the fact that it was composed of real life CCTV footage, was not standardized, contained a lot of noise and many more other problems that will be explained in the next section.
 
 \section{Dataset presentation}
 The data-set was obtained by publicly available sources:
@@ -8,9 +8,9 @@ The data-set was obtained by publicly available sources:
 	\item seymanurakti/fight-detection-surv-dataset\footnote{\url{https://github.com/seymanurakti/fight-detection-surv-dataset}}: 100Mb
 \end{itemize}
 
-The first one was extracted from Kaggle and the data-set was divided into three sub-category (Non-Violence/Violence/Weapon-Violence)\footnote{Taken from version 2, now version 3 is available}, the second one was taken from a GitHub repository and the videos where divided into two sub folder (fight/noFight). The whole data-set was then divided by us into two main categories: violence and non-violence.
+The first one was extracted from Kaggle and the dataset was divided into three sub-category (Non-Violence/Violence/Weapon-Violence)\footnote{Taken from version 2, now version 3 is available}, the second one was taken from a GitHub repository and the videos were divided into two sub folder (fight/noFight). The whole data-set was then divided by us into two main categories: \textit{violence} and \textit{non violence}.
 
-As previously said the problem, which is by itself quite difficult, was made harder due to the poor usability of the data-set that did not give any information on the videos aside form the category: i.e. no action frame nor bounding box. Moreover the first set of videos received a usability score of 6.88 on Kaggle, which represents a community rating of the data-set as a whole, for example some video contained writing in the screen, others were not CCTV footage, but live news one and some were recording through a phone of a screen with the footage. In addition the data-set was not standardized at all with videos with variable length and some greyscaled, some full color. Some example with the relative category are shown in Fig. \ref*{fig:overall}.
+As previously said the problem, which is by itself quite difficult, was made harder due to the poor usability of the dataset which did not give any information on the videos aside form the category: i.e. no action frame nor bounding boxes. Moreover the first set of videos received a usability score of 6.88 on Kaggle, which represents a community rating of the dataset as a whole, for example some videos contained writing over the screen, others were not CCTV footage, but live news ones and some were recording through a phone of a screen with the footage. In addition the dataset was not standardized at all with videos with variable length and some greyscaled, some full color. Some example with the relative category are shown in Fig. \ref{fig:overall}.
 
 \begin{figure}[]
     \centering
@@ -49,12 +49,18 @@ As previously said the problem, which is by itself quite difficult, was made har
         \includegraphics[width=\linewidth]{./images/V97-050.png}
         \caption{Violent frame with no violence}
         \label{fig:sub6}
+    \end{subfigure}\\
+    \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{./images/fi098-005.png}
+        \caption{Video taken with a phone camera}
+        \label{fig:sub7}
     \end{subfigure}
     \caption{Some \textit{violent} frames from the data-set}
     \label{fig:overall}
 \end{figure}
 
-What these images prove is the dirtiness of the data-set and the difficulty of the task at hand. For example Fig \ref{fig:sub3} not only have violence in the distance, but also has writing on the screen, Fig \ref{fig:sub4} is a phone recoding of a desktop screen with the footage, Fig \ref{fig:sub6} is a frame with no violence at all, but it was classified as violent by the data-set because is part of a video that contains violence, but to remove all the frames that are not violent would have been too much of a hassle (more than 7k images to be process manually). In addition many videos like Fig. \ref{fig:sub2} and \ref{fig:sub4} are greyscaled. Others like Fig. \ref{fig:sub5} and \ref{fig:sub6} contains black bars on the side. This means that the data-set used was not standardized at all and there was no easy way to automatize the cleaning process.
+What these images prove is the dirtiness of the dataset and the difficulty of the task at hand. For example Fig. \ref{fig:sub3} not only has violence in the distance, but also has writing on the screen, Fig. \ref{fig:sub4} is a phone recoding of a desktop screen with the footage like Fig. \ref{fig:sub7}. Fig. \ref{fig:sub6} is a frame with no violence at all, but it was classified as a violent one because it is part of a video that contains violence, but removing all frames that are not violent would have been too much of a hassle (more than 7k images to be process manually). In addition many videos like Fig. \ref{fig:sub2} and \ref{fig:sub4} are greyscaled. Others like Fig. \ref{fig:sub5} and \ref{fig:sub6} contain black bars on the side. This means that the data-set used was not standardized at all and there was no easy way to automate the cleaning process.
 
 \section{Goals and evaluation}
 The goal of this project is to develop a CNN capable of recognizing the presence of violence in the everyday CCTV footage in a binary detection system. We wanted to evaluate our models with a real life approach, meaning that, although an high accuracy is desirable, it is not the only metric we are interested in, due to the differences in error cost between mislabelling violence as non violence and vice versa. In fact we are also interested in the precision and recall of the model, because we want to minimize the number of false negatives, meaning the case of violence not recognized as such, because it could result in damage of property or even a loss of life. So it is preferable to have a low false negative rate at the cost of a higher false positive rate without making it too high, causing the police to waste time and resources on false alarms. 
