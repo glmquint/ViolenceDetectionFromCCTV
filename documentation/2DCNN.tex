@@ -107,7 +107,7 @@ For the first model we decided to use a very simple 2D CNN, the model was compos
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/simple3.png}
+    \includegraphics[scale=0.2]{images/simple3.png}
     \caption{Initial 2D CNN model}
     \label{fig:First2DCNN}
 \end{figure}
@@ -130,7 +130,8 @@ For the first model we decided to use a very simple 2D CNN, the model was compos
 The first comment to be made is that the confusion matrix is heavily bias towards the \textit{Non violence} class. This is due to the fact that the dataset can be quite chaotic and the model is not able to learn the features of the videos. For example the model may learn form the Non violence part of the dataset that gatherings of people are not to be flagged as violence, however this could easily lead to many false negatives (Violence images classified as Non violence ones).
 
 Another comment is to be made regarding the validation loss and accuracy, which is quite low in both cases, this could signal overfitting and general failing in extrapolating the main features of the videos. Since the training accuracy is almost immediately we can assume that the dataset is too small and the model starts to overfit in the first epochs.
-\pagebreak
+
+
 \section{Second model - data augmentation}
 For the second model we decided to keep the convolution layers to 2, add a dense layer and, most importantly, to add random\_flip(horizontal) and random\_rotation(0.1)  as shown in Fig. \ref{fig:Second2DCNN} to make it harder for the model to overfit immediately. All other parameters remained unchanged: this was done to see if the model would have been able to produce better results. 
 We decided to use a cautious approach since the problem presented itself as a very complicated one and we did not want to aport to many changes in a single \textit{pass} to avoid a time consuming trial and error process. 
@@ -139,19 +140,17 @@ Speaking of results the model no longer saturates training accuracy immediately,
 
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/simple4augnozoom.png}
-    \caption{Second 2D CNN model}
-    \label{fig:Second2DCNN}
-\end{figure}
-
-
-\begin{figure}[]
-    \centering
     \includegraphics[width=1\textwidth]{images/731a-simple4augnozoom-b538-history.png}
     \caption{Training history of the second model}
     \label{fig:Second2DCNNHistory}
 \end{figure}
 
+\begin{figure}[]
+    \centering
+    \includegraphics[scale=0.2]{images/simple4augnozoom.png}
+    \caption{Second 2D CNN model}
+    \label{fig:Second2DCNN}
+\end{figure}
 
 \begin{figure}[]
     \centering
@@ -160,12 +159,12 @@ Speaking of results the model no longer saturates training accuracy immediately,
     \label{fig:Second2DCNNMatrix}
 \end{figure}
 
-\pagebreak
+
 \section{Third model - \textit{upgrading} the model}
 Based on the results of the previous models we decided to try to \textit{upgrade} the model, this was done for two main reasons. The first one was to test the behavior of it in case of a more capable model. The second one was that, since the last results were not satisfactory especially in the validation accuracy, we thought the model were possibly overfitting, but it was doing it on the wrong features possibly like background, writings and other things. So we decide to amp the model capabilities as show in Fig. \ref{fig:Third2DCNN}.
 \begin{figure}[]
     \centering
-    \includegraphics[width=0.8\textwidth, height=0.8\textwidth, keepaspectratio]{images/simple3augConv8_64Dense128_64nozoom.png}
+    \includegraphics[scale=0.125]{images/simple3augConv8_64Dense128_64nozoom.png}
     \caption{Third 2D CNN model}
     \label{fig:Third2DCNN}
 \end{figure}
@@ -210,7 +209,7 @@ The model is presents itself with may dense layer and a single dropout layer. Th
     \centering
     \includegraphics[width=1\textwidth]{images/731a-medium7Dropout4-b538-history.png}
     \caption{Training history of the final model}
-    \label{fig:Third2DCNNHistory}
+    \label{fig:Final2DCNNHistory}
 \end{figure}
 \begin{figure}[]
     \centering
@@ -219,8 +218,7 @@ The model is presents itself with may dense layer and a single dropout layer. Th
     \label{fig:Final2DCNNMatrix}
 \end{figure}
 
-Instead of further complicating the model we decided to simplify it to avoid the phenomenon of overfitting. The fifth model is the simplest one and has decent result, with a good recall but produces a large number of false positive as shown in  Fig. \ref{fig:FifthModelConfMatrix}. Even if this model leads to a higher accuracy and Violence recall than the previous ones, the poor Non violence recall score is too low to be considered a good model. In Tab. \ref{tab:2DCNNTable} there is a recap of the accuracy and recall of the models. The code of the fifth model is shown in the following listing: 
-
+To recap all the experiment we run, we present a table with the accuracy and recall of the models in Tab. \ref{tab:2DCNNTable}. The first model is the best one apparently, but considering the size of the original dataset this cannot be considered a trustworthy result, the second model is the worst one, this is due to the fact that the data augmentation make the dataset more noisy and the model powerful enough to learn the correct features. The third model is the second best, this is due to the fact that the model is able to learn the correct features, but it is not able to generalize well. The final model is the best one so far, but it is still not able to learn the correct features of the videos. So a different approach is needed to solve the problem. The main issue is the dataset, it is too small so data augmentation is a must, but then we need a more powerful model to learn the correct features of the videos, so instead of trying to \textit{brute force} the problem we decided to rely on pretrained models to better understand the situation.
 
 \begin{table}[]
     \centering
@@ -238,14 +236,7 @@ Instead of further complicating the model we decided to simplify it to avoid the
     \caption{2D models accuracy and recall}
     \label{tab:2DCNNTable}
 \end{table}
-
-\begin{figure}[]
-    \centering
-    \includegraphics[width=0.8\textwidth]{images/731a-2D10_inv-86ad-conf_matrix.png}
-    \caption{Fifth model}
-    \label{fig:FifthModelConfMatrix}
-\end{figure}
-
+\pagebreak
 \section{Pretrained models: ResNet50}
 Since the 2D \textit{from scratch} CNN approach was not working we decided to try a different method, we decided to use pretrained models. This was done in order to have a better understanding of the problem by comparing the results of them with the ones we presented previously. We decided to use Resnet50 as the first pretrained model. \\
 
