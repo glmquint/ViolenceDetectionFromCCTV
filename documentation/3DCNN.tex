@@ -23,7 +23,7 @@ As explained in section \ref{framextraction}, the pickles approach allowed us to
     \label{fig:3DCNNschema}
 \end{figure}
 
-The very first test was done with a number of frames (NoF) equal to 5 and fps equal to 5, meaning that the model would receive bursts of 1 second. Fig. \ref{fig:First3DCNNconfusionMatrix} shows an interesting result, it is very similar to the best 2D scratch one with a slightly better recall score in general.
+The very first test was done with a number of frames (NoF) equal to 5 and fps equal to 5, meaning that the model would receive bursts of 1 second. Fig. \ref{fig:First3DCNNconfusionMatrix} shows an interesting result, it is better than our best 2D scratch one with a better recall score in general.
 
 \begin{figure}[]
     \centering
@@ -32,7 +32,13 @@ The very first test was done with a number of frames (NoF) equal to 5 and fps eq
     \label{fig:First3DCNNconfusionMatrix}
 \end{figure}
 
-The second test was done with NoF equal to 10 and fps equal to 5, meaning that the model would receive bursts of 2 seconds. This was done to see if the model would improve with more context, since 1 second of video does not carry much information. 
+The second test was done with NoF equal to 10 and fps equal to 5, meaning that the model would receive bursts of 2 seconds. This was done to see if the model would improve with more context, since 1 second of video does not carry much information. Keep in mind, however, that since some of the original dataset is made of videos shorter than 2 seconds both training and test sets are reduced. This means that results are to be taken lightly since they are not representative of the original dataset. In addition the previous model had to be simplified to avoid making it too complex for the smaller dataset, the new schema can be seen in Fig. \ref{fig:3D3CNNschema}. The result of this test are shown in Fig. \ref{fig:Second3DCNNconfusionMatrix}, and they are very better than the first test, with an improvement in the recall score for the violence class, also accuracy goes up to 75\%.
+\begin{figure}[]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/3D3CNNschema.png}
+    \caption{Schema of the second 3D CNN}
+    \label{fig:3D3CNNschema}
+\end{figure}
 
 \begin{figure}[]
     \centering
@@ -41,14 +47,7 @@ The second test was done with NoF equal to 10 and fps equal to 5, meaning that t
     \label{fig:Second3DCNNconfusionMatrix}
 \end{figure}
 
-Finally the third test was done with NoF equal to 15 and fps equal to 5, meaning that the model would receive bursts of 3 seconds. Keep in mind, however, that since some of the original dataset is made of videos shorter than 3 seconds both training and test sets are reduced. This means that results are to be taken lightly since they are not representative of the original dataset. In addition the previous model had to be simplified to avoid making it too complex for the smaller dataset, the new schema can be seen in Fig. \ref{fig:3D3CNNschema}. The results shown in Fig. \ref{fig:Third3DCNNconfusionMatrix} are the best one so far, with a very good recall score for both classes. This is due to the fact that the model has more context to work with and can better understand the situation.
-
-\begin{figure}[]
-    \centering
-    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/3D3CNNschema.png}
-    \caption{Schema of the second 3D CNN}
-    \label{fig:3D3CNNschema}
-\end{figure}
+Finally the third test was done with NoF equal to 15 and fps equal to 5, meaning that the model would receive bursts of 3 seconds.  The results shown in Fig. \ref{fig:Third3DCNNconfusionMatrix} are the best one so far, with a very good recall score for both classes. This is due to the fact that the model has more context to work with and can better understand the situation.
 
 
 \begin{figure}[]
