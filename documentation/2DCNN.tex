@@ -1,6 +1,7 @@
 \chapter{2D CNN approach}
 The very fist approach we tried was to develop a 2D CNN from scratch to recognize the frames of a video containing a scene of violence, to do that we needed to extract the frames from the videos and feed them to the AI model since a 2D CNN processes images.
 \section{Frame extraction}
+\label{framextraction}
 The idea initially was to extract all frames with the help of \textit{FFmpeg}. FFmpeg is a comprehensive software suite for recording, converting, and playing audio and video, it relies on libavcodec, a library for audio/video encoding. Following there is an example of usage.
 \begin{lstlisting}[language=bash, caption={FFmpeg example}, label={lst:FFmpegExample}]
 #!/bin/bash

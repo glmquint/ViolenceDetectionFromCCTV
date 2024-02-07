@@ -15,11 +15,11 @@ On the other hand, 3D CNNs extend the convolutional approach to three-dimensiona
 While 2D CNNs have proven effective for traditional image-related tasks like classification, object detection, and segmentation, 3D CNNs are specifically designed for applications where temporal information is essential. However, the use of 3D CNNs comes at a higher computational cost due to the increased complexity introduced by the additional dimension. This would have proved to be a problem for us due to the fact that we did not have a GPU at our disposal and the ones provided by Google Colab were not capable enough to handle big models and big data-sets.
 
 \section{Implementation}
-As explained in the "Frame extraction" section, the pickles approach allowed us to generate files containing the data needed to train and test the model. The \textit{number of frames} and the \textit{fps} values for each pkl\_config were used to test the same model on different input data like burst of 1, 2 or 3 seconds. As shown in Fig. \ref{fig:3DCNNschema}, the model is a very simple one, with 2 convolutional layers, 2 max pooling layers and 1 fully connected. The idea is not to dwell on the model and how to improve it, but to show that the addition of "context" to the input data, in this case the temporal dimension, allows the model to achieve better results independently from the complexity of the model.
+As explained in section \ref{framextraction}, the pickles approach allowed us to generate files containing the data needed to train and test the model. The \textit{number of frames} and the \textit{fps} values for each pkl\_config were used to test the same model on different input data like burst of 1, 2 or 3 seconds. As shown in Fig. \ref{fig:3DCNNschema}, the model is a very simple one, with 2 convolutional layers, 2 max pooling layers and 1 fully connected. The idea is not to dwell on the model and how to improve it, but to show that the addition of "context" to the input data, in this case the temporal dimension, allows the model to achieve better results independently from the complexity of the model.
 \begin{figure}[]
     \centering
     \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/3D9CNNschema.png}
-    \caption{Schema of the 3D CNN}
+    \caption{Schema of the first 3D CNN}
     \label{fig:3DCNNschema}
 \end{figure}
 
