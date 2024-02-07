@@ -188,7 +188,7 @@ After various test we produced the model shown in Fig. \ref{fig:Final2DCNN} and 
 The model presents itself with many dense layers and a single dropout layer. The convolutional layers are mostly unchanged. The model was trained for 100 epochs with a batch size of 32 samples as the previous ones until now. The results obtained show a 62\% accuracy which is the highest one so far excluding the first model which was heavily biased towards the \textit{Non violence} class and also was clearly overfitting. The main issue of this model remains the violence recall which is still too low to satisfy our needs, in fact a score of 49\% is clearly unsatisfactory. The confusion matrix is shown in Fig. \ref{fig:Final2DCNNMatrix}. Regarding the training history shown in Fig. \ref{fig:Final2DCNNHistory} we can see that the model quickly starts to overfit, but an increase in dropout layer or weight decay did not improve the results.
 
 %TODO: add the code of the model
-\iffalse
+\iftrue
 \begin{figure}[]
     \centering
     \includegraphics[scale=0.05]{images/medium7Dropout4SchemaTop.png}
@@ -270,7 +270,7 @@ We used ResNet50 with the imagenet weights, and we choose to do
 
 The model shows promising results, with a good confusion matrix (Fig. \ref{fig:ResNet2d1}) and also with a 76\% recall on violence.
 
-\begin{figure}[]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/731a-resnet2D1-86ad-conf_matrix.png}
     \caption{ResNet50 first model}
@@ -300,7 +300,7 @@ We continued to improve the model adding the layers for data augmentation, howev
 \end{lstlisting}
 
 In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model (Fig. \ref{fig:ROCResnet}). 
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/ROCResnet.png}
     \caption{ROC of the first Resnet50 vs third Resnet50 model}
@@ -331,7 +331,7 @@ In order to fight overfitting we introduced a dropout layer and the overall accu
 
 
 We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons of the second layer for a correct classification of the problem.
-\begin{lstlisting}[language=python, caption={ResNet50 Fourth test}, label={lst:resnet50CodeFourthTest}]
+\begin{lstlisting}[language=python, caption={ResNet50, fourth model code}, label={lst:resnet50CodeFourthTest}]
     resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
     set_trainable = False
     for layer in resnet.layers:
@@ -422,14 +422,14 @@ We obtain a good model (Fig. \ref{fig:EfficientNetB0_24}), with a 78\% accuracy 
 \begin{table}[]
 \centering
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|l|l|l|}
+\begin{tabular}{|l|l|l|l|l|}
 \hline
-                               & \textbf{Accuracy} & \textbf{Violence recall} & \textbf{Non Violence recall} \\ \hline
-\textbf{Features extraction 1} & 0,6214            & 0,3857                   & 0,85714                      \\ \hline
-\textbf{Features extraction 2} & 0,6928            & 0,4809                   & 0,90476                      \\ \hline
-\textbf{Fine tuning 1}         & 0,7690            & 0,70952                  & 0,82857                      \\ \hline
-\textbf{Fine tuning 2}         & 0,7762            & 0,7191                   & 0,8333                       \\ \hline
-\textbf{Fine tuning 3}         & 0,7833            & 0,8762                   & 0,6905                       \\ \hline
+                               & \textbf{Accuracy} & \textbf{Violence recall} & \textbf{Non Violence recall} & \textbf{Approach}\\ \hline
+\textbf{EfficientNetB0 1st model} & 0,6214            & 0,3857                   & 0,85714 & Feature extraction                      \\ \hline
+\textbf{EfficientNetB0 2nd model} & 0,6928            & 0,4809                   & 0,90476 & Feature extraction                     \\ \hline
+\textbf{EfficientNetB0 3rd model}         & 0,7690            & 0,70952                  & 0,82857 & Fine tuning                     \\ \hline
+\textbf{EfficientNetB0 4th model}         & 0,7762            & 0,7191                   & 0,8333 & Fine tuning                      \\ \hline
+\textbf{EfficientNetB0 5th model}         & 0,7833            & 0,8762                   & 0,6905 & Fine tuning                       \\ \hline
 \end{tabular}%
 }
 \caption{EfficientNetB0 accuracy and recall}
