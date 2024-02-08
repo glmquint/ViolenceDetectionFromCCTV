@@ -23,7 +23,7 @@ As explained in section \ref{framextraction}, the pickles approach allowed us to
     \label{fig:3DCNNschema}
 \end{figure}
 
-The very first test was done with a number of frames (NoF) equal to 5 and fps equal to 5, meaning that the model would receive bursts of 1 second. Fig. \ref{fig:First3DCNNconfusionMatrix} shows an interesting result, it is better than our best 2D scratch one with a better recall score in general.
+The very first test was done with a number of frames (NoF) equal to 5 and fps equal to 5, meaning that the model would receive bursts of 1 second. Fig. \ref{fig:First3DCNNconfusionMatrix} shows an interesting result, it is very similar to the best 2D scratch one with a slightly better recall score in general.
 
 \begin{figure}[]
     \centering
@@ -32,28 +32,29 @@ The very first test was done with a number of frames (NoF) equal to 5 and fps eq
     \label{fig:First3DCNNconfusionMatrix}
 \end{figure}
 
-The second test was done with NoF equal to 10 and fps equal to 5, meaning that the model would receive bursts of 2 seconds. This was done to see if the model would improve with more context, since 1 second of video does not carry much information. Keep in mind, however, that since some of the original dataset is made of videos shorter than 2 seconds both training and test sets are reduced. This means that results are to be taken lightly since they are not representative of the original dataset. In addition the previous model had to be simplified to avoid making it too complex for the smaller dataset, the new schema can be seen in Fig. \ref{fig:3D3CNNschema}. The result of this test are shown in Fig. \ref{fig:Second3DCNNconfusionMatrix}, and they are very better than the first test, with an improvement in the recall score for the violence class, also accuracy goes up to 75\%.
-\begin{figure}[]
-    \centering
-    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/3D3CNNschema.png}
-    \caption{Schema of the second 3D CNN}
-    \label{fig:3D3CNNschema}
-\end{figure}
+The second test was done with NoF equal to 10 and fps equal to 5, meaning that the model would receive bursts of 2 seconds. This was done to see if the model would improve with more context, since 1 second of video does not carry much information. 
 
 \begin{figure}[]
     \centering
     \includegraphics[width=0.8\textwidth]{images/ce07-testGiacomo3D3-9fcf-conf_matrix.png}
-    \caption{Confusion matrix of the second 3D model}
+    \caption{Confusion matrix of the second 3D model with 2 seconds bursts}
     \label{fig:Second3DCNNconfusionMatrix}
 \end{figure}
 
-Finally the third test was done with NoF equal to 15 and fps equal to 5, meaning that the model would receive bursts of 3 seconds.  The results shown in Fig. \ref{fig:Third3DCNNconfusionMatrix} are the best one so far, with a very good recall score for both classes. This is due to the fact that the model has more context to work with and can better understand the situation.
+Finally the third test was done with NoF equal to 15 and fps equal to 5, meaning that the model would receive bursts of 3 seconds. Keep in mind, however, that since some of the original dataset is made of videos shorter than 3 seconds both training and test sets are reduced. This means that results are to be taken lightly since they are not representative of the original dataset. In addition the previous model had to be simplified to avoid making it too complex for the smaller dataset, the new schema can be seen in Fig. \ref{fig:3D3CNNschema}. The results shown in Fig. \ref{fig:Third3DCNNconfusionMatrix} are the best one so far, with a very good recall score for both classes. This is due to the fact that the model has more context to work with and can better understand the situation.
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=0.6\textwidth, keepaspectratio]{images/3D9CNNschema.png}
+    \caption{Schema of the second 3D CNN}
+    \label{fig:3D3CNNschema}
+\end{figure}
 
 
 \begin{figure}[]
     \centering
     \includegraphics[width=0.8\textwidth]{images/71d5-testGiacomo3D3-9fcf-conf_matrix.png}
-    \caption{Confusion matrix of the third 3D model}
+    \caption{Confusion matrix of the second 3D model with 3 seconds burst}
     \label{fig:Third3DCNNconfusionMatrix}
 \end{figure}
 
@@ -65,15 +66,15 @@ Finally a table with the accuracy of all the models can be seen in Tab. \ref{tab
 \begin{table}[h]
     \centering
     \resizebox{\textwidth}{!}{%
-    \begin{tabular}{c|c|c|c|}
-    \cline{2-4}
-                                                             & \textbf{Accuracy} & \textbf{Violence recall} & \textbf{Non violence recall} \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Best 2D scratch}}           & 0,62619            & 0,49048                   & 0,7619 \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Best ResNet50}}               & 0,7643            & 0,6952                   & 0,8333                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Best EfficientNetB0}} & 0,7833            & 0,8762                   & 0,6905                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{First 3D model}}            & 0,7074            & 0,5744                   & 0,8404                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Second 3D model}}           & 0,7532            & 0,7468                   & 0,7595                       \\ \hline
-    \multicolumn{1}{|c|}{\textbf{Third 3D model}}            & 0,8065            & 0,8710                   & 0,7419                       \\ \hline
+    \begin{tabular}{c|c|c|c|c|}
+    \cline{2-5}
+                                                             & \textbf{Frame burst} & \textbf{Accuracy} & \textbf{Violence recall} & \textbf{Non violence recall} \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Best 2D scratch}}           & Single frame & 0,62619            & 0,49048                   & 0,7619 \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Best ResNet50}}               & Single frame & 0,7643            & 0,6952                   & 0,8333                       \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Best EfficientNetB0}} & Single frame & 0,7833            & 0,8762                   & 0,6905                       \\ \hline
+    \multicolumn{1}{|c|}{\textbf{First 3D model}}            & 1 second burst & 0,7074            & 0,5744                   & 0,8404                       \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Second 3D model}}           & 2 seconds burst & 0,7532            & 0,7468                   & 0,7595                       \\ \hline
+    \multicolumn{1}{|c|}{\textbf{Second 3D model}}            & 3 seconds burst & 0,8065            & 0,8710                   & 0,7419                       \\ \hline
     \end{tabular}%
     }
     \caption{Models accuracy}

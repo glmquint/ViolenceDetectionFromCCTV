@@ -18,52 +18,39 @@ done;
 
 This command uses FFmpeg to extract frames from a video file and save them as individual images, it iterates over each file in the specified directory and applies the FFmpeg command to convert the video to frames. The frames are saved with the same name as the original video file, followed by a three-digit number to indicate the frame sequence, the frames are saved in the specified output directory.
 However, this method was found to not be flexible enough, in the light of a new approach to the problem like a 3D CNN, discussed in chapter \ref{chapter:3D}, so we decided to use a different approach. We decided to extract frames at runtime depending on various configuration parameters and feed them to the AI model. However performing the frame extraction each time we wanted to train a network would have been too much of a workload. To speed up the process, we decided instead to separate the extraction phase from the training phase and save a serialized copy of the preprocessed dataset on local files, through the help of the \textit{pickle} library in Python. In addition, this approach was more efficient in terms of memory usage.
-The following code shows the basic idea of the frame extraction process:
+The following pseudo-code shows the basic idea of the frame extraction process:
 
-\begin{lstlisting}[language=python, caption={Pickles generation}, label={lst:PicklesGeneration}]
+\begin{lstlisting}[language=python, caption={Pseudocode of pickles generation logic}, label={lst:PicklesGeneration}]
     # Function to load a dataset of videos with corresponding labels
-   function load_video_dataset(dataset_path, pkl_config, create_on_missing):
-        # Initialize empty lists for training and testing data and labels
+   def create_video_dataset(dataset_path, dataset_config):
         train_data = []
         train_labels = []
         test_data = []
         test_labels = []
-    
-        # Generate paths for storing pickle files
-        pickles_dir =  f'{ROOT_PATH}/pickles'
-        pickle_name = sha256([pickle key information])
-    
-        # Create a list of pickle file paths
-        # f'{pickles_dir}/{pickle_name}-train_data.pkl'
-        # f'{pickles_dir}/{pickle_name}-train_labels.pkl'
-        # f'{pickles_dir}/{pickle_name}-test_data.pkl'
-        # f'{pickles_dir}/{pickle_name}-test_labels.pkl'
+        
         try:
-            # Attempt to load data and labels from pickle files
+            # Attempt to load data and labels from pickle files 
+            # if they already exist
             load_data_from_pickles([pickle_file_paths...])
     
         except FileNotFoundError:
-            if create_on_missing:
-                # Create a list of labeled video paths from the dataset
-                labelled_paths = get_labeled_video_paths(dataset_path)
+            samples = collect_all_dataset_samples(dataset_path)
+			
+            data, labels = get_labelled_samples(samples, dataset_config)
     
-                # Shuffle the list of labeled video paths
-                # Avoid deleting always the same videos at balancing time
-                shuffle(labelled_video_paths)
+            # Shuffle the list of labeled videos
+            # Avoid deleting always the same videos at balancing time
+            shuffle(data, labels)
     
-                # Load and preprocess videos,balancing
-                # the number of samples for each class
-                labelled_frame = balance(labelled_paths, pkl_config)
+            # Load and preprocess videos,balancing
+            # the number of samples for each class
+            data, labels = balance(data, labels)
+            
+            train_data, train_labels, test_data, test_labels = split_data(data, labels, testing_split)
+   
+            # Save the data and labels as pickle files
+            save_pickles([pickle_file_paths...])
     
-                # Split the data into training and testing sets
-                split_data(labelled_frame, pkl_config, min_amount)
-    
-                # Save the data and labels as pickle files
-                save_pickles([pickle_file_paths...])
-    
-                # Update the pickle register with 
-                #the new pickle file information
-                update_pickle_register(pickles_dir, pickle_name, pkl_config)
     
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
@@ -220,7 +207,7 @@ The model presents itself with many dense layers and a single dropout layer. The
 
 To recap all the experiments we ran, we present a table with the accuracy and recall of the models in Tab. \ref{tab:2DCNNTable}. The first model is the best one apparently, but considering the size of the original dataset this cannot be considered a trustworthy result, the second model is the worst one, this is due to the fact that the data augmentation make the dataset more noisy and the model was not powerful enough to learn the correct features. The third model improves on the results of the previous one, this is due to the fact that the model is able to learn the correct features, but it is not able to generalize well. The fourth model is the best one so far, but it is still not able to learn the correct features of the videos. So a different approach is needed to solve the problem. The main issue is the dataset, it is too small so data augmentation is a must, but then we need a more powerful model to learn the correct features of the videos, so instead of trying to \textit{brute force} the problem we decided to rely on pretrained models to better understand the situation.
 
-\begin{table}[]
+\begin{table}[H]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{c|c|c|c|}
@@ -253,20 +240,23 @@ We used ResNet50 with the imagenet weights, and we choose to do
 \textit{fine tuning}. We started by adding our dense layers for classifications and we only train the last convolutional block.  
 
 \begin{lstlisting}[language=python, caption={ResNet50, first model}, label={lst:resnet50Code}]
-    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
-    set_trainable = False
-    for layer in resnet.layers:
-        if layer.name == 'conv5_block1_1_conv':
-            set_trainable = True
-        if set_trainable:
-            layer.trainable = True
-        else:
-            layer.trainable = False
-    model.add(resnet)
-    model.add(GlobalAveragePooling2D())
-    model.add(Dense(256, activation='relu'))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
+def ResnetFirstModel(input_shape):
+  model = Sequential()
+  resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+  set_trainable = False
+  for layer in resnet.layers:
+      if layer.name == 'conv5_block1_1_conv':
+          set_trainable = True
+      if set_trainable:
+          layer.trainable = True
+      else:
+          layer.trainable = False
+  model.add(resnet)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(256, activation='relu'))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
 \end{lstlisting}
 
 The model shows promising results, with a good confusion matrix (Fig. \ref{fig:ResNet2d1}) and also with a 76\% recall on violence.
@@ -280,24 +270,25 @@ The model shows promising results, with a good confusion matrix (Fig. \ref{fig:R
 
 We continued to improve the model adding the layers for data augmentation, however we noticed worse performances compared to the first model and signals of overfitting. 
 \begin{lstlisting}[language=python, caption={ResNet50, second model code}, label={lst:resnet50CodeSecondTest}]
-    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
-    set_trainable = False
-    for layer in resnet.layers:
-        if layer.name == 'conv5_block1_1_conv':
-            set_trainable = True
-        if set_trainable:
-            layer.trainable = True
-        else:
-            layer.trainable = False
-
-    model.add(RandomFlip('horizontal'))
-    model.add(RandomRotation(0.1))
-    model.add(RandomZoom(0.2))
-    model.add(resnet)
-    model.add(GlobalAveragePooling2D())
-    model.add(Dense(256, activation='relu'))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
+def ResnetSecondModel(input_shape):
+  model = Sequential()
+  resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+  set_trainable = False
+  for layer in resnet.layers:
+      if layer.name == 'conv5_block1_1_conv':
+          set_trainable = True
+      if set_trainable:
+          layer.trainable = True
+      else:
+          layer.trainable = False
+  model.add(RandomFlip('horizontal'))
+  model.add(RandomRotation(0.1))
+  model.add(resnet)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(256, activation='relu'))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
 \end{lstlisting}
 
 In order to fight overfitting we introduced a dropout layer and the overall accuracy improved, and we obtained better results compared to the original model (Fig. \ref{fig:ROCResnet}). 
@@ -309,50 +300,52 @@ In order to fight overfitting we introduced a dropout layer and the overall accu
 \end{figure}
 
 \begin{lstlisting}[language=python, caption={ResNet50, third model code}, label={lst:resnet50CodeThirdTest}]
-    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
-    set_trainable = False
-    for layer in resnet.layers:
-        if layer.name == 'conv5_block1_1_conv':
-            set_trainable = True
-        if set_trainable:
-            layer.trainable = True
-        else:
-            layer.trainable = False
-
-    model.add(RandomFlip('horizontal'))
-    model.add(RandomRotation(0.1))
-    model.add(RandomZoom(0.2))
-    model.add(resnet)
-    model.add(GlobalAveragePooling2D())
-    model.add(Dense(256, activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
+def ResnetThirdModel(input_shape):
+  model = Sequential()
+  resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+  set_trainable = False
+  for layer in resnet.layers:
+      if layer.name == 'conv5_block1_1_conv':
+          set_trainable = True
+      if set_trainable:
+          layer.trainable = True
+      else:
+          layer.trainable = False
+  model.add(RandomFlip('horizontal'))
+  model.add(RandomRotation(0.1))
+  model.add(resnet)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(256, activation='relu'))
+  model.add(Dropout(0.2))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
 \end{lstlisting}
 
 
 We also run a fourth test applying a small dropout also to the second dense layer but we not obtain better results compared to the previous model. We assume that our network needs the 128 neurons of the second layer for a correct classification of the problem.
 \begin{lstlisting}[language=python, caption={ResNet50, fourth model code}, label={lst:resnet50CodeFourthTest}]
-    resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
-    set_trainable = False
-    for layer in resnet.layers:
-        if layer.name == 'conv5_block1_1_conv':
-            set_trainable = True
-        if set_trainable:
-            layer.trainable = True
-        else:
-            layer.trainable = False
-
-    model.add(RandomFlip('horizontal'))
-    model.add(RandomRotation(0.1))
-    model.add(RandomZoom(0.2))
-    model.add(resnet)
-    model.add(GlobalAveragePooling2D())
-    model.add(Dense(256, activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.1))
-    model.add(Dense(1, activation='sigmoid'))
+def ResnetFourthModel(input_shape):
+  model = Sequential()
+  resnet = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+  set_trainable = False
+  for layer in resnet.layers:
+      if layer.name == 'conv5_block1_1_conv':
+          set_trainable = True
+      if set_trainable:
+          layer.trainable = True
+      else:
+          layer.trainable = False
+  model.add(RandomFlip('horizontal'))
+  model.add(RandomRotation(0.1))
+  model.add(resnet)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(256, activation='relu'))
+  model.add(Dropout(0.2))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dropout(0.1))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
 \end{lstlisting}
 
 Following a recap of the accuracy of the models and the recall:
@@ -389,11 +382,60 @@ EfficientNetB0 is also suitable for resource-constrained environments like mobil
 \end{figure}
 
 The reason we choose EfficientNetB0 is because it can be used in IoT devices, like cameras, for a first filter on images for police operators. The net was used with the imagenet weights like ResNet50.
-Instead of going directly to fine tuning we start with a \textit{features extraction} approach.
-We start from the simplest implementation as possible, with only a final dense layer with one neuron with a sigmoid activation function.
-We obtained a 62\% overall accuracy, comparable to the final model of the \emph{scratch} 2D CNN, but below both ResNet models. In order to improve the performance of the network we add data augmentation layers and also more dense layers.
-The accuracy increased from 62\% to 69\% and accordingly the violence recall (48\% compared to 38\%), however we are still far away from an acceptable level. This leads us to the conclusion that the best approach to get good results is moving to fine tuning. 
-We decided to train only the two last convolutional blocks, since going at the first layers would need a huge dataset, we leave the same dense layers for classification as used in fine tuning. 
+Instead of going directly to fine tuning we start with a \textit{features extraction} approach as seen in listing \ref{lst:efficientnetFirstModel}.
+\pagebreak
+\begin{lstlisting}[language=python, caption={EfficientNetB0 first model}, label={lst:efficientnetFirstModel}]
+def EfficientnetFirstModel(input_shape):
+  model = Sequential()
+  EfficientNetB0 = EfficientNetB0(weights='imagenet', include_top=False, input_shape=input_shape)
+  model.add(EfficientNetB0)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(256, activation='relu'))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
+\end{lstlisting}
+
+The first model starts from the simplest implementation as possible, with only a final dense layer with one neuron with a sigmoid activation function.
+We obtained a 62\% overall accuracy, comparable to the final model of the \emph{scratch} 2D CNN, but below both ResNet models. In order to improve the performance of the network we add data augmentation layers and also more dense layers as seen in listing \ref{lst:efficientnetSecondModel}.
+
+\begin{lstlisting}[language=python, caption={EfficientNetB0 second model}, label={lst:efficientnetSecondModel}]
+def EfficientnetFirstModel(input_shape):
+  model = Sequential()
+  EfficientNetB0 = EfficientNetB0(weights='imagenet', include_top=False, input_shape=input_shape)
+  model.add(EfficientNetB0)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(256, activation='relu'))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
+\end{lstlisting}
+
+The accuracy of the second model increased from 62\% to 69\% and accordingly the violence recall (48\% compared to 38\%), however we are still far away from an acceptable level. This leads us to the conclusion that the best approach to get good results is moving to fine tuning. 
+We decided to train only the two last convolutional blocks, since going at the first layers would need a huge dataset, we leave the same dense layers for classification as used in fine tuning, as seen in listing \ref{lst:efficientnetThirdModel}. 
+
+\begin{lstlisting}[language=python, caption={EfficientNetB0 third model}, label={lst:efficientnetThirdModel}]
+def EfficientnetThirdModel(input_shape):
+  model = Sequential()
+  model.add(RandomFlip('horizontal'))
+  model.add(RandomRotation(0.1))
+  EfficientNetB0 = EfficientNetB0(weights='imagenet', include_top=False, input_shape=input_shape)
+  set_trainable = False
+  for layer in EfficientNetB0.layers:
+    if layer.name == 'block6a_expand_conv':
+        set_trainable = True
+    if set_trainable:
+        layer.trainable = True
+    else:
+        layer.trainable = False
+  model.add(EfficientNetB0)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(256, activation='relu'))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
+\end{lstlisting}
+
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/731a-EfficientNetB0_15-5a4e-conf_matrix.png}
@@ -401,7 +443,32 @@ We decided to train only the two last convolutional blocks, since going at the f
     \label{fig:EfficientNetB0_15}
 \end{figure}
 The results obtained (Fig. \ref{fig:EfficientNetB0_15}) are better than the ones in fine tuning, this models also obtains obtains similar results in terms of accuracy and violence recall, to the third ResNet model.
-We follow this approach unfreezing another half of the fifth convolutional block.
+We follow this approach unfreezing another half of the fifth convolutional block as seen in listing \ref{lst:efficientnetFourthModel}.
+
+\begin{lstlisting}[language=python, caption={EfficientNetB0 fourth model}, label={lst:efficientnetFourthModel}]
+def EfficientnetFourthModel(input_shape):
+  model = Sequential()
+  model.add(RandomFlip('horizontal'))
+  model.add(RandomRotation(0.1))
+  EfficientNetB0 = EfficientNetB0(weights='imagenet', include_top=False, input_shape=input_shape)
+  set_trainable = False
+  for layer in EfficientNetB0.layers:
+    if layer.name == 'block5c_expand_conv':
+        set_trainable = True
+    if set_trainable:
+        layer.trainable = True
+    else:
+        layer.trainable = False
+  model.add(EfficientNetB0)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(512, activation='relu'))
+  model.add(Dropout(0.2))
+  model.add(Dense(256, activation='relu'))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
+\end{lstlisting}
+
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/ROCEfficientNet.png}
@@ -411,7 +478,35 @@ We follow this approach unfreezing another half of the fifth convolutional block
 
 Looking at the ROC curves (Fig. \ref{fig:EfficientNetB0_ROC}) we cannot draw conclusions on the winner but the AUC is better and also between 0.1 and 0.8 false positive rate the fourth model performs better than the third. 
 
-However we try to push the model to the limit adding another dense layer in order to improve the classifier performance and adding also dropout to avoid overfitting.
+However we try to push the model to the limit adding another dense layer in order to improve the classifier performance and adding also dropout to avoid overfitting as seen in listing \ref{lst:efficientnetFifthModel}.
+
+\begin{lstlisting}[language=python, caption={EfficientNetB0 fifth model}, label={lst:efficientnetFifthModel}]
+def EfficientnetFifthModel(input_shape):
+  model = Sequential()
+  model.add(RandomFlip('horizontal'))
+  model.add(RandomRotation(0.1))
+  EfficientNetB0 = EfficientNetB0(weights='imagenet', include_top=False, input_shape=input_shape)
+  set_trainable = False
+  for layer in EfficientNetB0.layers:
+    if layer.name == 'block5c_expand_conv':
+        set_trainable = True
+    if set_trainable:
+        layer.trainable = True
+    else:
+        layer.trainable = False
+  model.add(EfficientNetB0)
+  model.add(GlobalAveragePooling2D())
+  model.add(Dense(1024, activation='relu'))
+  model.add(Dropout(0.3))
+  model.add(Dense(512, activation='relu'))
+  model.add(Dropout(0.2))
+  model.add(Dense(256, activation='relu'))
+  model.add(Dropout(0.1))
+  model.add(Dense(128, activation='relu'))
+  model.add(Dense(1, activation='sigmoid'))
+  return model
+\end{lstlisting}
+
 We obtain a good model (Fig. \ref{fig:EfficientNetB0_24}), with a 78\% accuracy with a strong recall on violence, that we used as a second choice parameter. 
 \begin{figure}[h!]
     \centering
@@ -420,7 +515,7 @@ We obtain a good model (Fig. \ref{fig:EfficientNetB0_24}), with a 78\% accuracy 
     \label{fig:EfficientNetB0_24}
 \end{figure}
 
-\begin{table}[]
+\begin{table}[H]
 \centering
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{|l|l|l|l|l|}
